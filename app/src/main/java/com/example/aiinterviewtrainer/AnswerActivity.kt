@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Base64
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -25,11 +26,8 @@ import java.net.URL
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
-import android.util.Log
 
 class AnswerActivity : AppCompatActivity() {
-    private val TAG = "GoogleSTT"
-
     private lateinit var questionTextView: TextView
     private lateinit var answerEditText: EditText
     private lateinit var listeningTextView: TextView
@@ -49,7 +47,9 @@ class AnswerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_answer)
 
-        question = intent.getStringExtra(EXTRA_QUESTION).orEmpty().ifBlank { DEFAULT_QUESTION }
+        question = intent.getStringExtra(EXTRA_QUESTION).orEmpty().ifBlank {
+            DEFAULT_QUESTION
+        }
         practiceId = intent.getStringExtra(EXTRA_PRACTICE_ID).orEmpty().ifBlank {
             System.currentTimeMillis().toString()
         }
@@ -234,10 +234,7 @@ class AnswerActivity : AppCompatActivity() {
                     .put("languageCode", "ko-KR")
                     .put("enableAutomaticPunctuation", true)
             )
-            .put(
-                "audio",
-                JSONObject().put("content", audioContent)
-            )
+            .put("audio", JSONObject().put("content", audioContent))
 
         OutputStreamWriter(connection.outputStream, Charsets.UTF_8).use { writer ->
             writer.write(requestBody.toString())
@@ -302,6 +299,7 @@ class AnswerActivity : AppCompatActivity() {
         const val EXTRA_ANSWER = "extra_answer"
         const val EXTRA_ANSWER_SECONDS = "extra_answer_seconds"
 
+        private const val TAG = "GoogleSTT"
         private const val REQUEST_RECORD_AUDIO = 1001
         private const val SAMPLE_RATE = 16_000
         private const val DEFAULT_QUESTION = "HR 직무에서 가장 중요하다고 생각하는 역량은 무엇인가요?"
