@@ -21,10 +21,21 @@ class ResultActivity : AppCompatActivity() {
             System.currentTimeMillis().toString()
         }
         val question = intent.getStringExtra(AnswerActivity.EXTRA_QUESTION).orEmpty()
+        val questionType = intent.getStringExtra(AnswerActivity.EXTRA_QUESTION_TYPE).orEmpty()
+        val expectedKeywords = intent.getStringArrayListExtra(AnswerActivity.EXTRA_EXPECTED_KEYWORDS).orEmpty()
+        val evaluationPoints = intent.getStringArrayListExtra(AnswerActivity.EXTRA_EVALUATION_POINTS).orEmpty()
         val answer = intent.getStringExtra(AnswerActivity.EXTRA_ANSWER).orEmpty()
         val answerSeconds = intent.getIntExtra(AnswerActivity.EXTRA_ANSWER_SECONDS, 0)
 
-        analysis = createTemporaryAnalysis(practiceId, question, answer, answerSeconds)
+        analysis = createTemporaryAnalysis(
+            practiceId = practiceId,
+            question = question,
+            questionType = questionType,
+            expectedKeywords = expectedKeywords,
+            evaluationPoints = evaluationPoints,
+            answer = answer,
+            answerSeconds = answerSeconds
+        )
         bindResult(analysis)
         bindButtons(analysis)
     }
@@ -40,15 +51,15 @@ class ResultActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.timeTextView).text = analysis.answerSeconds.toString()
 
         findViewById<TextView>(R.id.keywordCommunication).text =
-            analysis.includedKeywords.getOrNull(0) ?: "커뮤니케이션"
+            analysis.includedKeywords.getOrNull(0) ?: analysis.expectedKeywords.getOrNull(0) ?: "기대 키워드"
         findViewById<TextView>(R.id.keywordProblemSolving).text =
-            analysis.includedKeywords.getOrNull(1) ?: "문제 해결"
+            analysis.includedKeywords.getOrNull(1) ?: analysis.expectedKeywords.getOrNull(1) ?: "핵심 역량"
         findViewById<TextView>(R.id.keywordJobUnderstanding).text =
-            analysis.missingKeywords.getOrNull(0) ?: "직무 이해도"
+            analysis.missingKeywords.getOrNull(0) ?: analysis.expectedKeywords.getOrNull(2) ?: "직무 이해도"
         findViewById<TextView>(R.id.keywordCooperation).text =
-            analysis.missingKeywords.getOrNull(1) ?: "협업 경험"
+            analysis.missingKeywords.getOrNull(1) ?: analysis.expectedKeywords.getOrNull(3) ?: "협업 경험"
         findViewById<TextView>(R.id.keywordResult).text =
-            analysis.missingKeywords.getOrNull(2) ?: "성과"
+            analysis.missingKeywords.getOrNull(2) ?: analysis.expectedKeywords.getOrNull(4) ?: "성과"
 
         findViewById<TextView>(R.id.situationStatusTextView).text = analysis.situationStatus
         findViewById<TextView>(R.id.taskStatusTextView).text = analysis.taskStatus
@@ -75,40 +86,27 @@ class ResultActivity : AppCompatActivity() {
     private fun createTemporaryAnalysis(
         practiceId: String,
         question: String,
+        questionType: String,
+        expectedKeywords: List<String>,
+        evaluationPoints: List<String>,
         answer: String,
         answerSeconds: Int
     ): AnswerAnalysis {
         val includedKeywords = mutableListOf<String>()
         val missingKeywords = mutableListOf<String>()
 
-        collectKeyword(
-            answer = answer,
-            keyword = "커뮤니케이션",
-            triggers = listOf("소통", "커뮤니케이션", "의견", "대화"),
-            includedKeywords = includedKeywords,
-            missingKeywords = missingKeywords
-        )
-        collectKeyword(
-            answer = answer,
-            keyword = "문제 해결",
-            triggers = listOf("문제", "해결", "개선"),
-            includedKeywords = includedKeywords,
-            missingKeywords = missingKeywords
-        )
-        collectKeyword(
-            answer = answer,
-            keyword = "협업 경험",
-            triggers = listOf("협업", "팀", "동료"),
-            includedKeywords = includedKeywords,
-            missingKeywords = missingKeywords
-        )
-        collectKeyword(
-            answer = answer,
-            keyword = "성과",
-            triggers = listOf("성과", "결과", "%", "증가", "감소"),
-            includedKeywords = includedKeywords,
-            missingKeywords = missingKeywords
-        )
+        val keywordBasis = expectedKeywords.ifEmpty {
+            listOf("커뮤니케이션", "문제 해결", "협업 경험", "성과")
+        }
+
+        keywordBasis.forEach { keyword ->
+            collectKeyword(
+                answer = answer,
+                keyword = keyword,
+                includedKeywords = includedKeywords,
+                missingKeywords = missingKeywords
+            )
+        }
 
         val situation = if (answer.contains("상황") || answer.contains("때")) "일부 포함" else "부족"
         val task = if (answer.contains("목표") || answer.contains("과제") || answer.contains("역할")) "일부 포함" else "부족"
@@ -126,6 +124,9 @@ class ResultActivity : AppCompatActivity() {
         return AnswerAnalysis(
             practiceId = practiceId,
             question = question.ifBlank { "질문 정보가 없습니다." },
+            questionType = questionType,
+            expectedKeywords = keywordBasis,
+            evaluationPoints = evaluationPoints,
             answer = answer.ifBlank { "답변 정보가 없습니다." },
             answerLength = answer.length,
             answerSeconds = answerSeconds.coerceAtLeast(1),
@@ -143,11 +144,10 @@ class ResultActivity : AppCompatActivity() {
     private fun collectKeyword(
         answer: String,
         keyword: String,
-        triggers: List<String>,
         includedKeywords: MutableList<String>,
         missingKeywords: MutableList<String>
     ) {
-        if (triggers.any { answer.contains(it) }) {
+        if (answer.contains(keyword, ignoreCase = true)) {
             includedKeywords.add(keyword)
         } else {
             missingKeywords.add(keyword)
@@ -162,6 +162,9 @@ class ResultActivity : AppCompatActivity() {
             JSONObject()
                 .put("practiceId", analysis.practiceId)
                 .put("question", analysis.question)
+                .put("questionType", analysis.questionType)
+                .put("expectedKeywords", JSONArray(analysis.expectedKeywords))
+                .put("evaluationPoints", JSONArray(analysis.evaluationPoints))
                 .put("answer", analysis.answer)
                 .put("answerLength", analysis.answerLength)
                 .put("answerSeconds", analysis.answerSeconds)
@@ -207,6 +210,7 @@ class ResultActivity : AppCompatActivity() {
         return """
             [답변 분석 결과]
             질문: ${analysis.question}
+            질문 유형: ${analysis.questionType.ifBlank { "정보 없음" }}
             내 답변: ${analysis.answer}
 
             분석 결과:
@@ -229,6 +233,9 @@ class ResultActivity : AppCompatActivity() {
     private data class AnswerAnalysis(
         val practiceId: String,
         val question: String,
+        val questionType: String,
+        val expectedKeywords: List<String>,
+        val evaluationPoints: List<String>,
         val answer: String,
         val answerLength: Int,
         val answerSeconds: Int,

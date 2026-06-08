@@ -29,6 +29,16 @@ android {
             "google_stt_api_key",
             localProperties.getProperty("google.stt.api.key", "")
         )
+        resValue(
+            "string",
+            "gemini_api_key",
+            localProperties.getProperty("gemini.api.key", "")
+        )
+        resValue(
+            "string",
+            "gemini_model_name",
+            localProperties.getProperty("gemini.model.name", "gemini-2.5-flash")
+        )
     }
 
     buildTypes {
@@ -56,6 +66,9 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

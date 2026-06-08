@@ -40,6 +40,9 @@ class AnswerActivity : AppCompatActivity() {
     private var recorder: AudioRecord? = null
     private var audioBuffer = ByteArrayOutputStream()
     private var question: String = DEFAULT_QUESTION
+    private var questionType: String = ""
+    private var expectedKeywords: List<String> = emptyList()
+    private var evaluationPoints: List<String> = emptyList()
     private var practiceId: String = ""
     private var answerStartedAt: Long = 0L
 
@@ -53,6 +56,9 @@ class AnswerActivity : AppCompatActivity() {
         practiceId = intent.getStringExtra(EXTRA_PRACTICE_ID).orEmpty().ifBlank {
             System.currentTimeMillis().toString()
         }
+        questionType = intent.getStringExtra(EXTRA_QUESTION_TYPE).orEmpty()
+        expectedKeywords = intent.getStringArrayListExtra(EXTRA_EXPECTED_KEYWORDS).orEmpty()
+        evaluationPoints = intent.getStringArrayListExtra(EXTRA_EVALUATION_POINTS).orEmpty()
         answerStartedAt = System.currentTimeMillis()
 
         questionTextView = findViewById(R.id.questionTextView)
@@ -282,6 +288,9 @@ class AnswerActivity : AppCompatActivity() {
         val resultIntent = Intent(this, ResultActivity::class.java).apply {
             putExtra(EXTRA_PRACTICE_ID, practiceId)
             putExtra(EXTRA_QUESTION, question)
+            putExtra(EXTRA_QUESTION_TYPE, questionType)
+            putStringArrayListExtra(EXTRA_EXPECTED_KEYWORDS, ArrayList(expectedKeywords))
+            putStringArrayListExtra(EXTRA_EVALUATION_POINTS, ArrayList(evaluationPoints))
             putExtra(EXTRA_ANSWER, answer)
             putExtra(EXTRA_ANSWER_SECONDS, elapsedSeconds)
         }
@@ -296,6 +305,9 @@ class AnswerActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_PRACTICE_ID = "extra_practice_id"
         const val EXTRA_QUESTION = "extra_question"
+        const val EXTRA_QUESTION_TYPE = "extra_question_type"
+        const val EXTRA_EXPECTED_KEYWORDS = "extra_expected_keywords"
+        const val EXTRA_EVALUATION_POINTS = "extra_evaluation_points"
         const val EXTRA_ANSWER = "extra_answer"
         const val EXTRA_ANSWER_SECONDS = "extra_answer_seconds"
 
