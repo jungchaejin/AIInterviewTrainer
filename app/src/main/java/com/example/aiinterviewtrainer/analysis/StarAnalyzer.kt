@@ -90,7 +90,7 @@ object StarAnalyzer {
 
     private fun scoreToStatus(score: Int): String {
         return when (score) {
-            SCORE_SUFFICIENT -> "충분"
+            SCORE_SUFFICIENT -> "포함"
             SCORE_PARTIAL -> "일부 포함"
             else -> "부족"
         }

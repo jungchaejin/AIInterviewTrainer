@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FAFBFD">
@@ -60,11 +61,11 @@
                 android:id="@+id/questionResultTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="본인의 강점이 업무에 어떻게 기여할 수 있는지 설명해주세요."
                 android:textColor="@color/text_black"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:lineSpacingExtra="5dp" />
+                android:lineSpacingExtra="5dp"
+                tools:text="본인의 강점이 업무에 어떻게 기여할 수 있는지 설명해주세요." />
 
             <View
                 android:layout_width="match_parent"
@@ -86,10 +87,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:text="저는 커뮤니케이션 능력이 뛰어납니다. 팀 내에서 발생하는 다양한 문제를 해결하기 위해 적극적으로 대화하며 프로젝트를 성공적으로 이끄는 편입니다."
                 android:textColor="@color/text_black"
                 android:textSize="15sp"
-                android:lineSpacingExtra="6dp" />
+                android:lineSpacingExtra="6dp"
+                tools:text="저는 팀 프로젝트에서 발생한 문제를 분석하고 해결했습니다." />
         </LinearLayout>
 
         <!-- LENGTH / TIME 카드 -->
@@ -132,10 +133,10 @@
                         android:id="@+id/lengthTextView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="86"
                         android:textColor="@color/main_blue"
                         android:textSize="30sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        tools:text="86" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -185,10 +186,10 @@
                         android:id="@+id/timeTextView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="30"
                         android:textColor="@color/main_blue"
                         android:textSize="30sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        tools:text="30" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -226,37 +227,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/keywordCommunication"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_chip_blue"
-                    android:text="커뮤니케이션"
-                    android:textColor="@color/main_blue"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/keywordProblemSolving"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="8dp"
-                    android:background="@drawable/bg_chip_blue"
-                    android:text="문제 해결"
-                    android:textColor="@color/main_blue"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/keywordJobUnderstanding"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="8dp"
-                    android:background="@drawable/bg_chip_gray"
-                    android:text="직무 이해도"
-                    android:textColor="#999999"
-                    android:textSize="12sp" />
-            </LinearLayout>
+                android:orientation="horizontal" />
 
             <!-- 키워드 둘째 줄 -->
             <LinearLayout
@@ -264,26 +235,45 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:orientation="horizontal" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/keywordCooperation"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_chip_gray"
-                    android:text="협업 경험"
-                    android:textColor="#999999"
-                    android:textSize="12sp" />
+                    android:text="●"
+                    android:textColor="#5EA0FF"
+                    android:textSize="10sp" />
 
                 <TextView
-                    android:id="@+id/keywordResult"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="8dp"
-                    android:background="@drawable/bg_chip_gray"
-                    android:text="성과"
-                    android:textColor="#999999"
-                    android:textSize="12sp" />
+                    android:layout_marginStart="4dp"
+                    android:text="포함된 키워드"
+                    android:textColor="@color/text_gray"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:text="●"
+                    android:textColor="#B5B5B5"
+                    android:textSize="10sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="포함되지 않은 키워드"
+                    android:textColor="@color/text_gray"
+                    android:textSize="11sp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -335,9 +325,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_status_red"
-                android:text="부족"
                 android:textColor="#D93025"
-                android:textSize="12sp" />
+                android:textSize="12sp"
+                tools:text="부족" />
         </LinearLayout>
 
         <!-- T 카드 -->
@@ -378,9 +368,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_status_red"
-                android:text="부족"
                 android:textColor="#D93025"
-                android:textSize="12sp" />
+                android:textSize="12sp"
+                tools:text="일부 포함" />
         </LinearLayout>
 
         <!-- A 카드 -->
@@ -421,9 +411,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_status_green"
-                android:text="일부 포함"
                 android:textColor="#0B8F2A"
-                android:textSize="12sp" />
+                android:textSize="12sp"
+                tools:text="포함" />
         </LinearLayout>
 
         <!-- R 카드 -->
@@ -464,9 +454,46 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_status_red"
-                android:text="부족"
                 android:textColor="#D93025"
-                android:textSize="12sp" />
+                android:textSize="12sp"
+                tools:text="부족" />
+        </LinearLayout>
+
+        <!-- 답변 품질 예측 카드 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="답변 품질 예측"
+                android:textColor="@color/text_black"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/qualityGradeTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textColor="@color/main_blue"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                tools:text="보통" />
+
+            <TextView
+                android:id="@+id/qualityConfidenceTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textColor="@color/text_gray"
+                android:textSize="14sp"
+                tools:text="예측 신뢰도 82%" />
         </LinearLayout>
 
         <!-- 종합 피드백 카드 -->
@@ -491,10 +518,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:text="답변에서 본인의 생각은 잘 드러나지만, 실제 경험과 구체적인 결과가 부족합니다.\n\n추천 보완 사항:\n1. 커뮤니케이션 능력이 뛰어나다는 추상적인 표현 대신, 갈등 상황을 중재했거나 의견을 조율했던 구체적인 사례를 언급하세요.\n2. 프로젝트의 결과나 성과를 정량적 수치로 표현하여 설득력을 높이세요."
                 android:textColor="@color/text_black"
                 android:textSize="15sp"
-                android:lineSpacingExtra="7dp" />
+                android:lineSpacingExtra="7dp"
+                tools:text="Gemini가 생성한 종합 피드백이 표시됩니다." />
         </LinearLayout>
 
         <!-- 기록 저장 버튼 -->

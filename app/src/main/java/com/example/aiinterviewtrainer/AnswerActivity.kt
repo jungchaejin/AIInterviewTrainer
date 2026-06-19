@@ -26,6 +26,7 @@ import java.net.URL
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.sqrt
 
 class AnswerActivity : AppCompatActivity() {
     private lateinit var questionTextView: TextView
@@ -38,7 +39,9 @@ class AnswerActivity : AppCompatActivity() {
     private val isRecording = AtomicBoolean(false)
 
     private var recorder: AudioRecord? = null
+    private var recordingThread: Thread? = null
     private var audioBuffer = ByteArrayOutputStream()
+    private val audioBufferLock = Any()
     private var question: String = DEFAULT_QUESTION
     private var questionType: String = ""
     private var expectedKeywords: List<String> = emptyList()
@@ -147,33 +150,61 @@ class AnswerActivity : AppCompatActivity() {
             return
         }
 
-        audioBuffer = ByteArrayOutputStream()
+        synchronized(audioBufferLock) {
+            audioBuffer = ByteArrayOutputStream()
+        }
         isRecording.set(true)
         recorder?.startRecording()
         listeningTextView.text = "Listening..."
         speechButton.text = "답변 종료"
 
-        executor.execute {
+        recordingThread = Thread {
             val buffer = ByteArray(bufferSize)
             while (isRecording.get()) {
                 val readCount = recorder?.read(buffer, 0, buffer.size) ?: 0
                 if (readCount > 0) {
-                    audioBuffer.write(buffer, 0, readCount)
+                    synchronized(audioBufferLock) {
+                        audioBuffer.write(buffer, 0, readCount)
+                    }
                 }
             }
+        }.apply {
+            name = "GoogleSttRecorder"
+            start()
         }
     }
 
     private fun stopRecordingAndTranscribe() {
         stopRecordingOnly()
 
-        val audioBytes = audioBuffer.toByteArray()
+        val audioBytes = synchronized(audioBufferLock) {
+            audioBuffer.toByteArray()
+        }
+        val audioStats = analyzePcmAudio(audioBytes)
         Log.d(TAG, "audioBytes size = ${audioBytes.size}")
+        Log.d(
+            TAG,
+            "audio duration=${audioStats.durationSeconds}s rms=${audioStats.rms} peak=${audioStats.peak}"
+        )
 
         if (audioBytes.isEmpty()) {
             listeningTextView.text = "답변 준비 중"
             speechButton.text = "답변하기"
             Toast.makeText(this, "녹음된 답변이 없습니다.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (audioStats.durationSeconds < MIN_AUDIO_SECONDS) {
+            listeningTextView.text = "답변 준비 중"
+            speechButton.text = "답변하기"
+            Toast.makeText(this, "답변을 조금 더 길게 녹음해 주세요.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (audioStats.peak < MIN_PEAK_AMPLITUDE) {
+            listeningTextView.text = "답변 준비 중"
+            speechButton.text = "답변하기"
+            Toast.makeText(this, "소리가 너무 작게 녹음됐습니다. 마이크 가까이에서 말해 주세요.", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -213,11 +244,18 @@ class AnswerActivity : AppCompatActivity() {
     private fun stopRecordingOnly() {
         if (!isRecording.getAndSet(false)) return
 
+        val activeRecorder = recorder
         runCatching {
-            recorder?.stop()
+            activeRecorder?.stop()
         }
-        recorder?.release()
+
+        runCatching {
+            recordingThread?.join(RECORDING_THREAD_JOIN_TIMEOUT_MS)
+        }
+
+        activeRecorder?.release()
         recorder = null
+        recordingThread = null
     }
 
     private fun requestGoogleSpeechToText(audioBytes: ByteArray): String {
@@ -237,7 +275,10 @@ class AnswerActivity : AppCompatActivity() {
                 JSONObject()
                     .put("encoding", "LINEAR16")
                     .put("sampleRateHertz", SAMPLE_RATE)
+                    .put("audioChannelCount", 1)
                     .put("languageCode", "ko-KR")
+                    .put("model", "latest_long")
+                    .put("maxAlternatives", 1)
                     .put("enableAutomaticPunctuation", true)
             )
             .put("audio", JSONObject().put("content", audioContent))
@@ -271,6 +312,45 @@ class AnswerActivity : AppCompatActivity() {
             .optJSONObject(0)
             ?.optString("transcript")
             .orEmpty()
+    }
+
+    private fun analyzePcmAudio(audioBytes: ByteArray): AudioStats {
+        if (audioBytes.size < BYTES_PER_SAMPLE) {
+            return AudioStats(durationSeconds = 0f, rms = 0.0, peak = 0)
+        }
+
+        var sumSquares = 0.0
+        var peak = 0
+        var sampleCount = 0
+        var index = 0
+
+        while (index + 1 < audioBytes.size) {
+            val low = audioBytes[index].toInt() and 0xFF
+            val high = audioBytes[index + 1].toInt()
+            val sample = (high shl 8) or low
+            val amplitude = kotlin.math.abs(sample)
+
+            if (amplitude > peak) {
+                peak = amplitude
+            }
+
+            sumSquares += sample.toDouble() * sample.toDouble()
+            sampleCount++
+            index += BYTES_PER_SAMPLE
+        }
+
+        val rms = if (sampleCount == 0) {
+            0.0
+        } else {
+            sqrt(sumSquares / sampleCount.toDouble())
+        }
+        val durationSeconds = sampleCount.toFloat() / SAMPLE_RATE.toFloat()
+
+        return AudioStats(
+            durationSeconds = durationSeconds,
+            rms = rms,
+            peak = peak
+        )
     }
 
     private fun openResult() {
@@ -314,6 +394,16 @@ class AnswerActivity : AppCompatActivity() {
         private const val TAG = "GoogleSTT"
         private const val REQUEST_RECORD_AUDIO = 1001
         private const val SAMPLE_RATE = 16_000
+        private const val BYTES_PER_SAMPLE = 2
+        private const val MIN_AUDIO_SECONDS = 1.0f
+        private const val MIN_PEAK_AMPLITUDE = 500
+        private const val RECORDING_THREAD_JOIN_TIMEOUT_MS = 1_000L
         private const val DEFAULT_QUESTION = "HR 직무에서 가장 중요하다고 생각하는 역량은 무엇인가요?"
     }
+
+    private data class AudioStats(
+        val durationSeconds: Float,
+        val rms: Double,
+        val peak: Int
+    )
 }

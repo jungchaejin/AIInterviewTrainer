@@ -3,17 +3,25 @@ package com.example.aiinterviewtrainer
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.example.aiinterviewtrainer.analysis.AnswerFeatureAnalysis
 import com.example.aiinterviewtrainer.analysis.FeatureExtractor
+import com.example.aiinterviewtrainer.repository.AnswerFeedbackRepository
+import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
+import kotlin.math.roundToInt
 
 class ResultActivity : AppCompatActivity() {
     private lateinit var analysis: AnswerAnalysis
+    private var isFeedbackLoading = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,7 +47,8 @@ class ResultActivity : AppCompatActivity() {
             answerSeconds = answerSeconds
         )
         bindResult(analysis)
-        bindButtons(analysis)
+        bindButtons()
+        loadGeminiFeedback()
     }
 
     private fun bindResult(analysis: AnswerAnalysis) {
@@ -52,26 +61,113 @@ class ResultActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.lengthTextView).text = analysis.answerLength.toString()
         findViewById<TextView>(R.id.timeTextView).text = analysis.answerSeconds.toString()
 
-        findViewById<TextView>(R.id.keywordCommunication).text =
-            analysis.includedKeywords.getOrNull(0) ?: analysis.expectedKeywords.getOrNull(0) ?: "기대 키워드"
-        findViewById<TextView>(R.id.keywordProblemSolving).text =
-            analysis.includedKeywords.getOrNull(1) ?: analysis.expectedKeywords.getOrNull(1) ?: "핵심 역량"
-        findViewById<TextView>(R.id.keywordJobUnderstanding).text =
-            analysis.missingKeywords.getOrNull(0) ?: analysis.expectedKeywords.getOrNull(2) ?: "직무 이해도"
-        findViewById<TextView>(R.id.keywordCooperation).text =
-            analysis.missingKeywords.getOrNull(1) ?: analysis.expectedKeywords.getOrNull(3) ?: "협업 경험"
-        findViewById<TextView>(R.id.keywordResult).text =
-            analysis.missingKeywords.getOrNull(2) ?: analysis.expectedKeywords.getOrNull(4) ?: "성과"
-
-        findViewById<TextView>(R.id.situationStatusTextView).text = analysis.situationStatus
-        findViewById<TextView>(R.id.taskStatusTextView).text = analysis.taskStatus
-        findViewById<TextView>(R.id.actionStatusTextView).text = analysis.actionStatus
-        findViewById<TextView>(R.id.resultStatusTextView).text = analysis.resultStatus
+        bindKeywords(analysis)
+        bindStarStatus(R.id.situationStatusTextView, R.id.situationBadge, analysis.situationStatus)
+        bindStarStatus(R.id.taskStatusTextView, R.id.taskBadge, analysis.taskStatus)
+        bindStarStatus(R.id.actionStatusTextView, R.id.actionBadge, analysis.actionStatus)
+        bindStarStatus(R.id.resultStatusTextView, R.id.resultBadge, analysis.resultStatus)
+        findViewById<TextView>(R.id.qualityGradeTextView).text = analysis.mlPrediction.grade
+        findViewById<TextView>(R.id.qualityConfidenceTextView).text =
+            "예측 신뢰도 ${(analysis.mlPrediction.confidence * 100).roundToInt()}%"
         findViewById<TextView>(R.id.feedbackTextView).text = analysis.feedback
     }
 
-    private fun bindButtons(analysis: AnswerAnalysis) {
+    private fun bindKeywords(analysis: AnswerAnalysis) {
+        val firstRow = findViewById<LinearLayout>(R.id.keywordRow1)
+        val secondRow = findViewById<LinearLayout>(R.id.keywordRow2)
+        firstRow.removeAllViews()
+        secondRow.removeAllViews()
+
+        val includedKeywords = analysis.includedKeywords.map { it.trim().lowercase() }.toSet()
+        val keywords = (
+            analysis.expectedKeywords + analysis.includedKeywords + analysis.missingKeywords
+            )
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .distinctBy { it.lowercase() }
+
+        keywords.forEachIndexed { index, keyword ->
+            val targetRow = if (index < KEYWORDS_PER_ROW) firstRow else secondRow
+            val isIncluded = keyword.lowercase() in includedKeywords
+            targetRow.addView(createKeywordChip(keyword, isIncluded, targetRow.childCount > 0))
+        }
+    }
+
+    private fun createKeywordChip(
+        keyword: String,
+        isIncluded: Boolean,
+        hasStartMargin: Boolean
+    ): TextView {
+        return TextView(this).apply {
+            text = keyword
+            textSize = 12f
+            maxLines = 1
+            setPadding(dp(12), dp(5), dp(12), dp(5))
+            setBackgroundResource(if (isIncluded) R.drawable.bg_chip_blue else R.drawable.bg_chip_gray)
+            setTextColor(
+                ContextCompat.getColor(
+                    this@ResultActivity,
+                    if (isIncluded) R.color.main_blue else R.color.keyword_missing_text
+                )
+            )
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                if (hasStartMargin) marginStart = dp(8)
+            }
+        }
+    }
+
+    private fun bindStarStatus(statusViewId: Int, badgeViewId: Int, rawStatus: String) {
+        val status = when (rawStatus) {
+            "충분", "포함" -> "포함"
+            "일부 포함" -> "일부 포함"
+            else -> "부족"
+        }
+        val statusBackground: Int
+        val badgeBackground: Int
+        val textColor: Int
+
+        when (status) {
+            "포함" -> {
+                statusBackground = R.drawable.bg_status_green
+                badgeBackground = R.drawable.bg_star_circle_green
+                textColor = R.color.star_green_text
+            }
+            "일부 포함" -> {
+                statusBackground = R.drawable.bg_status_yellow
+                badgeBackground = R.drawable.bg_star_circle_yellow
+                textColor = R.color.star_yellow_text
+            }
+            else -> {
+                statusBackground = R.drawable.bg_status_red
+                badgeBackground = R.drawable.bg_star_circle_red
+                textColor = R.color.star_red_text
+            }
+        }
+
+        findViewById<TextView>(statusViewId).apply {
+            text = status
+            setBackgroundResource(statusBackground)
+            setTextColor(ContextCompat.getColor(this@ResultActivity, textColor))
+        }
+        findViewById<TextView>(badgeViewId).apply {
+            setBackgroundResource(badgeBackground)
+            setTextColor(ContextCompat.getColor(this@ResultActivity, textColor))
+        }
+    }
+
+    private fun dp(value: Int): Int {
+        return (value * resources.displayMetrics.density).roundToInt()
+    }
+
+    private fun bindButtons() {
         findViewById<TextView>(R.id.saveButton).setOnClickListener {
+            if (isFeedbackLoading) {
+                Toast.makeText(this, "종합 피드백을 생성하고 있습니다.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             saveAnalysis(analysis)
             Toast.makeText(this, "기록을 저장했습니다.", Toast.LENGTH_SHORT).show()
         }
@@ -82,6 +178,44 @@ class ResultActivity : AppCompatActivity() {
 
         findViewById<ImageButton>(R.id.shareButton).setOnClickListener {
             shareAnalysis(analysis)
+        }
+    }
+
+    private fun loadGeminiFeedback() {
+        val feedbackTextView = findViewById<TextView>(R.id.feedbackTextView)
+        isFeedbackLoading = true
+        feedbackTextView.text = "잠시만 기다려 주세요! Gemini가 종합 피드백을 생성하고 있습니다."
+
+        lifecycleScope.launch {
+            runCatching {
+                AnswerFeedbackRepository.getFeedback(
+                    context = this@ResultActivity,
+                    question = analysis.question,
+                    questionType = analysis.questionType,
+                    answer = analysis.answer,
+                    expectedKeywords = analysis.expectedKeywords,
+                    evaluationPoints = analysis.evaluationPoints,
+                    includedKeywords = analysis.includedKeywords,
+                    missingKeywords = analysis.missingKeywords,
+                    situationStatus = analysis.situationStatus,
+                    taskStatus = analysis.taskStatus,
+                    actionStatus = analysis.actionStatus,
+                    resultStatus = analysis.resultStatus,
+                    qualityGrade = analysis.mlPrediction.grade
+                )
+            }.onSuccess { geminiFeedback ->
+                analysis = analysis.copy(feedback = geminiFeedback)
+                feedbackTextView.text = geminiFeedback
+            }.onFailure { exception ->
+                Log.e(TAG, "Gemini feedback generation failed", exception)
+                feedbackTextView.text = analysis.feedback
+                Toast.makeText(
+                    this@ResultActivity,
+                    "Gemini 피드백을 불러오지 못해 기본 분석을 표시합니다.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            isFeedbackLoading = false
         }
     }
 
@@ -103,6 +237,9 @@ class ResultActivity : AppCompatActivity() {
             expectedKeywords = keywordBasis,
             evaluationPoints = evaluationPoints
         )
+
+        val modelInput = featureAnalysis.toModelInput()
+        val prediction = AnswerQualityPredictor(this).predict(modelInput)
 
         val feedback = buildString {
             append("답변의 핵심 의도는 전달되지만, 실제 경험과 구체적인 결과가 더 보강되면 좋습니다.")
@@ -128,6 +265,7 @@ class ResultActivity : AppCompatActivity() {
             actionStatus = featureAnalysis.starAnalysis.action.status,
             resultStatus = featureAnalysis.starAnalysis.result.status,
             featureAnalysis = featureAnalysis,
+            mlPrediction = prediction,
             feedback = feedback,
             createdAt = System.currentTimeMillis()
         )
@@ -160,6 +298,9 @@ class ResultActivity : AppCompatActivity() {
                 .put("hasNumber", analysis.featureAnalysis.hasNumber.toDouble())
                 .put("concretenessScore", analysis.featureAnalysis.concretenessScore.toDouble())
                 .put("modelInput", JSONArray(analysis.featureAnalysis.toModelInput().toList()))
+                .put("mlPredictionGrade", analysis.mlPrediction.grade)
+                .put("mlPredictionConfidence", analysis.mlPrediction.confidence.toDouble())
+                .put("mlPredictionProbabilities", JSONArray(analysis.mlPrediction.probabilities))
                 .put("feedback", analysis.feedback)
                 .put("createdAt", analysis.createdAt)
         )
@@ -211,6 +352,10 @@ class ResultActivity : AppCompatActivity() {
             - Action: ${analysis.actionStatus}
             - Result: ${analysis.resultStatus}
 
+            답변 품질 예측:
+            - 등급: ${analysis.mlPrediction.grade}
+            - 신뢰도: ${(analysis.mlPrediction.confidence * 100).roundToInt()}%
+
             종합 피드백:
             ${analysis.feedback}
         """.trimIndent()
@@ -232,11 +377,14 @@ class ResultActivity : AppCompatActivity() {
         val actionStatus: String,
         val resultStatus: String,
         val featureAnalysis: AnswerFeatureAnalysis,
+        val mlPrediction: MlPredictionResult,
         val feedback: String,
         val createdAt: Long
     )
 
     companion object {
+        private const val TAG = "ResultActivity"
+        private const val KEYWORDS_PER_ROW = 3
         private const val PREFS_NAME = "interview_history_prefs"
         private const val KEY_HISTORY = "interview_history"
     }
