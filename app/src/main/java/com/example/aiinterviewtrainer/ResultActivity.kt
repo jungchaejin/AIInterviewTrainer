@@ -7,6 +7,8 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.aiinterviewtrainer.analysis.AnswerFeatureAnalysis
+import com.example.aiinterviewtrainer.analysis.FeatureExtractor
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -92,26 +94,15 @@ class ResultActivity : AppCompatActivity() {
         answer: String,
         answerSeconds: Int
     ): AnswerAnalysis {
-        val includedKeywords = mutableListOf<String>()
-        val missingKeywords = mutableListOf<String>()
-
         val keywordBasis = expectedKeywords.ifEmpty {
             listOf("커뮤니케이션", "문제 해결", "협업 경험", "성과")
         }
-
-        keywordBasis.forEach { keyword ->
-            collectKeyword(
-                answer = answer,
-                keyword = keyword,
-                includedKeywords = includedKeywords,
-                missingKeywords = missingKeywords
-            )
-        }
-
-        val situation = if (answer.contains("상황") || answer.contains("때")) "일부 포함" else "부족"
-        val task = if (answer.contains("목표") || answer.contains("과제") || answer.contains("역할")) "일부 포함" else "부족"
-        val action = if (answer.contains("했습니다") || answer.contains("진행") || answer.contains("노력")) "일부 포함" else "부족"
-        val result = if (answer.contains("결과") || answer.contains("성과") || answer.contains("%")) "일부 포함" else "부족"
+        val featureAnalysis = FeatureExtractor.extract(
+            answer = answer,
+            answerSeconds = answerSeconds,
+            expectedKeywords = keywordBasis,
+            evaluationPoints = evaluationPoints
+        )
 
         val feedback = buildString {
             append("답변의 핵심 의도는 전달되지만, 실제 경험과 구체적인 결과가 더 보강되면 좋습니다.")
@@ -128,30 +119,18 @@ class ResultActivity : AppCompatActivity() {
             expectedKeywords = keywordBasis,
             evaluationPoints = evaluationPoints,
             answer = answer.ifBlank { "답변 정보가 없습니다." },
-            answerLength = answer.length,
-            answerSeconds = answerSeconds.coerceAtLeast(1),
-            includedKeywords = includedKeywords.ifEmpty { listOf("핵심 의도") },
-            missingKeywords = missingKeywords.ifEmpty { listOf("구체적인 수치") },
-            situationStatus = situation,
-            taskStatus = task,
-            actionStatus = action,
-            resultStatus = result,
+            answerLength = featureAnalysis.answerLength,
+            answerSeconds = featureAnalysis.answerSeconds,
+            includedKeywords = featureAnalysis.includedKeywords.ifEmpty { listOf("핵심 의도") },
+            missingKeywords = featureAnalysis.missingKeywords.ifEmpty { listOf("구체적인 수치") },
+            situationStatus = featureAnalysis.starAnalysis.situation.status,
+            taskStatus = featureAnalysis.starAnalysis.task.status,
+            actionStatus = featureAnalysis.starAnalysis.action.status,
+            resultStatus = featureAnalysis.starAnalysis.result.status,
+            featureAnalysis = featureAnalysis,
             feedback = feedback,
             createdAt = System.currentTimeMillis()
         )
-    }
-
-    private fun collectKeyword(
-        answer: String,
-        keyword: String,
-        includedKeywords: MutableList<String>,
-        missingKeywords: MutableList<String>
-    ) {
-        if (answer.contains(keyword, ignoreCase = true)) {
-            includedKeywords.add(keyword)
-        } else {
-            missingKeywords.add(keyword)
-        }
     }
 
     private fun saveAnalysis(analysis: AnswerAnalysis) {
@@ -174,6 +153,13 @@ class ResultActivity : AppCompatActivity() {
                 .put("taskStatus", analysis.taskStatus)
                 .put("actionStatus", analysis.actionStatus)
                 .put("resultStatus", analysis.resultStatus)
+                .put("starScore", analysis.featureAnalysis.starAnalysis.normalizedScore.toDouble())
+                .put("answerLengthScore", analysis.featureAnalysis.answerLengthScore.toDouble())
+                .put("answerTimeScore", analysis.featureAnalysis.answerTimeScore.toDouble())
+                .put("keywordMatchRate", analysis.featureAnalysis.keywordMatchRate.toDouble())
+                .put("hasNumber", analysis.featureAnalysis.hasNumber.toDouble())
+                .put("concretenessScore", analysis.featureAnalysis.concretenessScore.toDouble())
+                .put("modelInput", JSONArray(analysis.featureAnalysis.toModelInput().toList()))
                 .put("feedback", analysis.feedback)
                 .put("createdAt", analysis.createdAt)
         )
@@ -245,6 +231,7 @@ class ResultActivity : AppCompatActivity() {
         val taskStatus: String,
         val actionStatus: String,
         val resultStatus: String,
+        val featureAnalysis: AnswerFeatureAnalysis,
         val feedback: String,
         val createdAt: Long
     )
