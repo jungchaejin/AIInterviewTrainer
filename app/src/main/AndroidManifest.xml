@@ -21,6 +21,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".JobSelectActivity"/>
+        <activity android:name=".HistoryActivity"/>
+        <activity android:name=".QuestionActivity"/>
+        <activity android:name=".AnswerActivity"/>
     </application>
 
 </manifest>

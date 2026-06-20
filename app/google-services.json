@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "907699494153",
+    "project_id": "android-b3f56",
+    "storage_bucket": "android-b3f56.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:907699494153:android:4141d56af81fe622ac47d8",
+        "android_client_info": {
+          "package_name": "com.example.aiinterviewtrainer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXKc8HxXrJ9i7fa6l2HHtrlXw5mWJCY2Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
