@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="44dp"
+    android:background="@drawable/bg_history_row"
+    android:gravity="center_vertical"
+    android:paddingHorizontal="14dp"
+    android:layout_marginBottom="8dp">
+
+    <ImageView
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        tools:src="@android:drawable/ic_menu_recent_history"
+        app:tint="#8B95A1" />
+
+    <TextView
+        android:id="@+id/tv_history_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        tools:text="2026.05.19 답변 기록 보기"
+        android:textColor="#4E5968"
+        android:textSize="13sp" />
+</LinearLayout>

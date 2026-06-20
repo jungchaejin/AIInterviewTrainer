@@ -2,4 +2,12 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="main_blue">#0A66D8</color>
+    <color name="light_blue">#EEF6FF</color>
+    <color name="text_black">#1F1F1F</color>
+    <color name="text_gray">#666666</color>
+    <color name="card_stroke">#DDDDDD</color>
+    <color name="soft_gray">#F6F7F9</color>
+    <color name="danger_red">#FFE1E1</color>
+    <color name="success_green">#8AF0A2</color>
 </resources>
