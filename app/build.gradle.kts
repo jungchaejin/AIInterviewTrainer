@@ -3,6 +3,8 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.google.gms.google-services")
+    id("kotlin-parcelize")
 }
 
 val localProperties = Properties().apply {
@@ -59,12 +61,21 @@ android {
     }
     androidResources {
         noCompress += "tflite"
+
+    buildFeatures {
+        viewBinding = true
     }
 }
 
 dependencies {
+    implementation(platform("com.google.firebase:firebase-bom:32.0.0"))
+
+    // Firebase
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-firestore")
 
     implementation("org.tensorflow:tensorflow-lite:2.7.0")
+    // AndroidX & UI
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -73,6 +84,13 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
+    implementation(libs.androidx.foundation.android)
+
+    // Gson & 기타
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation(libs.common)
+
+    // Test
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
