@@ -285,7 +285,7 @@ class ResultActivity : AppCompatActivity() {
             answer = answer.ifBlank { "답변 정보가 없습니다." },
             answerLength = featureAnalysis.answerLength,
             answerSeconds = featureAnalysis.answerSeconds,
-            includedKeywords = featureAnalysis.includedKeywords.ifEmpty { listOf("핵심 의도") },
+            includedKeywords = featureAnalysis.includedKeywords,
             missingKeywords = featureAnalysis.missingKeywords.ifEmpty { listOf("구체적인 수치") },
             situationStatus = featureAnalysis.starAnalysis.situation.status,
             taskStatus = featureAnalysis.starAnalysis.task.status,
