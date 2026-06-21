@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F9FC">
+    android:background="@color/soft_gray">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layout_toolbar"
@@ -21,7 +21,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="뒤로가기"
+            android:contentDescription="@string/back"
             android:padding="8dp"
             android:src="@drawable/ic_arrow_back"
             app:tint="@color/main_blue"
@@ -34,7 +34,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
-            android:text="AI Interview Trainer"
+            android:text="@string/app_name"
             android:textColor="@color/main_blue"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -65,8 +65,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="면접 질문 리스트"
-                android:textColor="#1A1A1A"
+                android:text="@string/question_list_title"
+                android:textColor="@color/text_black"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
@@ -75,8 +75,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="HR 직무 역량 강화를 위한 핵심 질문과 기록입니다."
-                android:textColor="#666666"
+                android:text="@string/question_list_subtitle"
+                android:textColor="@color/text_gray"
                 android:textSize="14sp" />
 
             <androidx.recyclerview.widget.RecyclerView

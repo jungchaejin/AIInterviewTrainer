@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FAFBFD">
+    android:background="@color/soft_gray">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -12,7 +12,6 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-        <!-- 상단바 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="48dp"
@@ -24,7 +23,7 @@
                 android:layout_width="40dp"
                 android:layout_height="match_parent"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="뒤로가기"
+                android:contentDescription="@string/back"
                 android:padding="8dp"
                 android:src="@drawable/ic_arrow_back"
                 app:tint="@color/main_blue" />
@@ -36,22 +35,20 @@
                 android:layout_marginStart="12dp"
                 android:layout_weight="1"
                 android:gravity="center_vertical"
-                android:text="AI Interview Trainer"
+                android:text="@string/app_name"
                 android:textColor="@color/main_blue"
                 android:textSize="18sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- 질문 라벨 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
-            android:text="ⓘ 질문"
+            android:text="@string/result_question"
             android:textColor="@color/main_blue"
             android:textSize="14sp" />
 
-        <!-- 질문/답변 카드 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -75,12 +72,12 @@
                 android:layout_height="1dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="16dp"
-                android:background="#E5E5E5" />
+                android:background="@color/card_stroke" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="내 답변"
+                android:text="@string/my_answer"
                 android:textColor="@color/text_black"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -96,14 +93,12 @@
                 tools:text="저는 팀 프로젝트에서 발생한 문제를 분석하고 해결했습니다." />
         </LinearLayout>
 
-        <!-- LENGTH / TIME 카드 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:orientation="horizontal">
 
-            <!-- LENGTH -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="150dp"
@@ -116,7 +111,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:letterSpacing="0.12"
-                    android:text="LENGTH"
+                    android:text="@string/length_label"
                     android:textColor="@color/text_black"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -144,9 +139,9 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="4dp"
+                        android:layout_marginStart="4dp"
                         android:layout_marginBottom="5dp"
-                        android:text="자"
+                        android:text="@string/character_unit"
                         android:textColor="@color/text_black"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -156,7 +151,6 @@
                 android:layout_width="16dp"
                 android:layout_height="match_parent" />
 
-            <!-- TIME -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="150dp"
@@ -169,7 +163,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:letterSpacing="0.12"
-                    android:text="TIME"
+                    android:text="@string/time_label"
                     android:textColor="@color/text_black"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -197,16 +191,15 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="4dp"
+                        android:layout_marginStart="4dp"
                         android:layout_marginBottom="5dp"
-                        android:text="초"
+                        android:text="@string/second_unit"
                         android:textColor="@color/text_black"
                         android:textSize="13sp" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
-        <!-- KEYWORDS 카드 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -219,7 +212,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.12"
-                android:text="KEYWORDS"
+                android:text="@string/keywords_label"
                 android:textColor="@color/text_black"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -240,7 +233,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="●"
+                    android:text="@string/legend_dot"
                     android:textColor="#5EA0FF"
                     android:textSize="10sp" />
 
@@ -248,7 +241,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:text="포함된 키워드"
+                    android:text="@string/included_keywords"
                     android:textColor="@color/text_gray"
                     android:textSize="11sp" />
 
@@ -256,7 +249,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="14dp"
-                    android:text="●"
+                    android:text="@string/legend_dot"
                     android:textColor="#B5B5B5"
                     android:textSize="10sp" />
 
@@ -264,23 +257,21 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:text="포함되지 않은 키워드"
+                    android:text="@string/missing_keywords"
                     android:textColor="@color/text_gray"
                     android:textSize="11sp" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- STAR 제목 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
-            android:text="STAR 구조 분석"
+            android:text="@string/star_analysis"
             android:textColor="@color/text_black"
             android:textSize="20sp"
             android:textStyle="bold" />
 
-        <!-- S 카드 -->
         <LinearLayout
             android:id="@+id/starSituationLayout"
             android:layout_width="match_parent"
@@ -289,8 +280,8 @@
             android:background="@drawable/bg_card"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp">
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
 
             <TextView
                 android:id="@+id/situationBadge"
@@ -298,7 +289,7 @@
                 android:layout_height="42dp"
                 android:background="@drawable/bg_star_circle_red"
                 android:gravity="center"
-                android:text="S"
+                android:text="@string/star_s"
                 android:textColor="#D93025"
                 android:textSize="15sp"
                 android:textStyle="bold" />
@@ -306,9 +297,9 @@
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="16dp"
+                android:layout_marginStart="16dp"
                 android:layout_weight="1"
-                android:text="Situation (상황)"
+                android:text="@string/star_situation"
                 android:textColor="@color/text_black"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -323,7 +314,6 @@
                 tools:text="부족" />
         </LinearLayout>
 
-        <!-- T 카드 -->
         <LinearLayout
             android:id="@+id/starTaskLayout"
             android:layout_width="match_parent"
@@ -332,8 +322,8 @@
             android:background="@drawable/bg_card"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp">
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
 
             <TextView
                 android:id="@+id/taskBadge"
@@ -341,7 +331,7 @@
                 android:layout_height="42dp"
                 android:background="@drawable/bg_star_circle_red"
                 android:gravity="center"
-                android:text="T"
+                android:text="@string/star_t"
                 android:textColor="#D93025"
                 android:textSize="15sp"
                 android:textStyle="bold" />
@@ -349,9 +339,9 @@
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="16dp"
+                android:layout_marginStart="16dp"
                 android:layout_weight="1"
-                android:text="Task (과제)"
+                android:text="@string/star_task"
                 android:textColor="@color/text_black"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -366,7 +356,6 @@
                 tools:text="일부 포함" />
         </LinearLayout>
 
-        <!-- A 카드 -->
         <LinearLayout
             android:id="@+id/starActionLayout"
             android:layout_width="match_parent"
@@ -375,8 +364,8 @@
             android:background="@drawable/bg_card"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp">
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
 
             <TextView
                 android:id="@+id/actionBadge"
@@ -384,7 +373,7 @@
                 android:layout_height="42dp"
                 android:background="@drawable/bg_star_circle_green"
                 android:gravity="center"
-                android:text="A"
+                android:text="@string/star_a"
                 android:textColor="#0B8F2A"
                 android:textSize="15sp"
                 android:textStyle="bold" />
@@ -392,9 +381,9 @@
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="16dp"
+                android:layout_marginStart="16dp"
                 android:layout_weight="1"
-                android:text="Action (행동)"
+                android:text="@string/star_action"
                 android:textColor="@color/text_black"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -409,7 +398,6 @@
                 tools:text="포함" />
         </LinearLayout>
 
-        <!-- R 카드 -->
         <LinearLayout
             android:id="@+id/starResultLayout"
             android:layout_width="match_parent"
@@ -418,8 +406,8 @@
             android:background="@drawable/bg_card"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp">
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
 
             <TextView
                 android:id="@+id/resultBadge"
@@ -427,7 +415,7 @@
                 android:layout_height="42dp"
                 android:background="@drawable/bg_star_circle_red"
                 android:gravity="center"
-                android:text="R"
+                android:text="@string/star_r"
                 android:textColor="#D93025"
                 android:textSize="15sp"
                 android:textStyle="bold" />
@@ -435,9 +423,9 @@
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="16dp"
+                android:layout_marginStart="16dp"
                 android:layout_weight="1"
-                android:text="Result (결과)"
+                android:text="@string/star_result"
                 android:textColor="@color/text_black"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -452,7 +440,6 @@
                 tools:text="부족" />
         </LinearLayout>
 
-        <!-- 답변 품질 예측 카드 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -464,7 +451,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="답변 품질 예측"
+                android:text="@string/quality_prediction"
                 android:textColor="@color/text_black"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -489,7 +476,6 @@
                 tools:text="예측 신뢰도 82%" />
         </LinearLayout>
 
-        <!-- 종합 피드백 카드 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -501,7 +487,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="종합 피드백"
+                android:text="@string/overall_feedback"
                 android:textColor="@color/main_blue"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -517,7 +503,6 @@
                 tools:text="Gemini가 생성한 종합 피드백이 표시됩니다." />
         </LinearLayout>
 
-        <!-- 기록 저장 버튼 -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/saveButton"
             android:layout_width="match_parent"
@@ -526,12 +511,11 @@
             android:background="@drawable/bg_blue_button"
             android:backgroundTint="@null"
             app:backgroundTint="@null"
-            android:text="기록 저장하기"
+            android:text="@string/save_record"
             android:textColor="#FFFFFF"
             android:textSize="17sp"
             android:textStyle="bold" />
 
-        <!-- 다시 연습 / 공유 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -547,7 +531,7 @@
                 android:background="@drawable/bg_outline_button"
                 android:backgroundTint="@null"
                 app:backgroundTint="@null"
-                android:text="다시 연습하기"
+                android:text="@string/practice_again"
                 android:textColor="@color/main_blue"
                 android:textSize="17sp"
                 android:textStyle="bold" />
@@ -566,7 +550,7 @@
                 android:src="@drawable/ic_share"
                 android:tint="@color/main_blue"
                 android:padding="15dp"
-                android:contentDescription="공유하기" />
+                android:contentDescription="@string/share" />
         </LinearLayout>
 
     </LinearLayout>

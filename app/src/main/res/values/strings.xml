@@ -1,3 +1,88 @@
 <resources>
-    <string name="app_name">AIInterviewTrainer</string>
+    <string name="app_name">AI Interview Trainer</string>
+    <string name="back">뒤로가기</string>
+    <string name="interviewer_image">면접관 사진</string>
+    <string name="choose_interviewer_image">갤러리에서 면접관 사진 선택</string>
+    <string name="share">공유하기</string>
+
+    <string name="main_greeting">안녕하세요, 지원자님!</string>
+    <string name="main_subtitle">오늘도 실전 같은 연습으로 면접 자신감을 키워보세요.</string>
+    <string name="create_practice">면접 연습 생성하기</string>
+    <string name="view_history">연습 기록 확인하기</string>
+
+    <string name="job_heading">AI가 당신의 공고를\n분석합니다.</string>
+    <string name="job_subtitle">지원하시려는 채용 공고의 상세 페이지\nURL을 아래에 입력해 주세요.</string>
+    <string name="requirements">준비 사항</string>
+    <string name="requirement_sites">• 사람인, 원티드, 링크드인 등 지원 공고</string>
+    <string name="requirement_details">• 자격 요건 및 우대 사항이 포함된 링크</string>
+    <string name="public_job_link">PUBLIC JOB LINK</string>
+    <string name="job_url_hint">채용 공고 링크를 붙여넣으세요</string>
+    <string name="job_ai_hint">AI가 공고에서 주요 역량 키워드를\n자동으로 추출합니다.</string>
+    <string name="generate_questions">질문 생성하기</string>
+    <string name="analyzing_job">채용 공고를 분석하고 있습니다</string>
+
+    <string name="question_list_title">면접 질문 리스트</string>
+    <string name="question_list_subtitle">직무 역량 강화를 위한 핵심 질문과 기록입니다.</string>
+    <string name="new_answer">+ 새 답변하기</string>
+    <string name="answer_history_format">%1$s 답변 기록 보기</string>
+    <string name="question_number_format">%1$d</string>
+
+    <string name="current_question">CURRENT QUESTION</string>
+    <string name="default_question">직무에서 가장 중요하다고 생각하는 역량은 무엇인가요?</string>
+    <string name="answer_ready">답변 준비 중</string>
+    <string name="answer_listening">답변 듣는 중</string>
+    <string name="answer_converting">답변 변환 중</string>
+    <string name="answer_complete">답변 입력 완료</string>
+    <string name="answer_hint">편안하게 본인의 생각을 말씀해 주세요. 준비가 되시면 답변하기 버튼을 눌러 주세요.</string>
+    <string name="start_answer">답변하기</string>
+    <string name="stop_answer">답변 종료</string>
+    <string name="analyze_answer">분석하기</string>
+
+    <string name="history_title">면접 연습 기록</string>
+    <string name="missing_history_title">제목 없음</string>
+
+    <string name="result_question">ⓘ 질문</string>
+    <string name="my_answer">내 답변</string>
+    <string name="length_label">LENGTH</string>
+    <string name="time_label">TIME</string>
+    <string name="character_unit">자</string>
+    <string name="second_unit">초</string>
+    <string name="keywords_label">KEYWORDS</string>
+    <string name="legend_dot">●</string>
+    <string name="included_keywords">포함된 키워드</string>
+    <string name="missing_keywords">포함되지 않은 키워드</string>
+    <string name="star_analysis">STAR 구조 분석</string>
+    <string name="star_s">S</string>
+    <string name="star_t">T</string>
+    <string name="star_a">A</string>
+    <string name="star_r">R</string>
+    <string name="star_situation">Situation (상황)</string>
+    <string name="star_task">Task (과제)</string>
+    <string name="star_action">Action (행동)</string>
+    <string name="star_result">Result (결과)</string>
+    <string name="quality_prediction">답변 품질 예측</string>
+    <string name="overall_feedback">종합 피드백</string>
+    <string name="save_record">기록 저장하기</string>
+    <string name="practice_again">다시 연습하기</string>
+    <string name="saved_result_loading">저장된 분석 결과를 불러오는 중입니다.</string>
+    <string name="prediction_confidence_format">예측 신뢰도 %1$d%%</string>
+
+    <string name="microphone_permission_required">음성 답변을 사용하려면 마이크 권한이 필요합니다.</string>
+    <string name="stt_key_required">local.properties에 Google STT API 키를 입력해 주세요.</string>
+    <string name="microphone_start_failed">마이크를 시작할 수 없습니다.</string>
+    <string name="image_load_failed">선택한 사진을 불러올 수 없습니다.</string>
+    <string name="no_recorded_answer">녹음된 답변이 없습니다.</string>
+    <string name="record_longer">답변을 조금 더 길게 녹음해 주세요.</string>
+    <string name="record_louder">소리가 너무 작게 녹음됐습니다. 마이크 가까이에서 말해 주세요.</string>
+    <string name="speech_not_recognized">음성을 인식하지 못했습니다.</string>
+    <string name="stt_failed">텍스트 변환에 실패했습니다.</string>
+    <string name="answer_required">답변을 입력한 뒤 분석해 주세요.</string>
+    <string name="url_required">URL을 입력해 주세요.</string>
+    <string name="text_extract_failed">채용 공고 본문을 추출하지 못했습니다.</string>
+    <string name="fallback_questions_notice">네트워크 연결이 원활하지 않아 기본 면접 질문 5개로 진행합니다.</string>
+    <string name="question_save_failed">질문 저장 실패: %1$s</string>
+    <string name="request_timeout">응답 시간이 초과되었습니다. 네트워크 상태를 확인한 뒤 다시 시도해 주세요.</string>
+    <string name="question_generation_failed">질문 생성 실패: %1$s</string>
+    <string name="unknown_error">알 수 없는 오류</string>
+    <string name="history_load_failed">기록을 불러오지 못했습니다: %1$s</string>
 </resources>

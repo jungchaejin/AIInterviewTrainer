@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FAFBFD">
+    android:background="@color/soft_gray">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -11,7 +12,6 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-        <!-- 상단바 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="48dp"
@@ -23,7 +23,7 @@
                 android:layout_width="40dp"
                 android:layout_height="match_parent"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="뒤로가기"
+                android:contentDescription="@string/back"
                 android:padding="8dp"
                 android:src="@drawable/ic_arrow_back"
                 app:tint="@color/main_blue" />
@@ -35,13 +35,12 @@
                 android:layout_marginStart="12dp"
                 android:layout_weight="1"
                 android:gravity="center_vertical"
-                android:text="AI Interview Trainer"
+                android:text="@string/app_name"
                 android:textColor="@color/main_blue"
                 android:textSize="18sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- 질문 카드 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -54,7 +53,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.18"
-                android:text="CURRENT QUESTION"
+                android:text="@string/current_question"
                 android:textColor="@color/main_blue"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -64,13 +63,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="HR 직무에서 가장 중요하다고 생각하는 역량은 무엇인가요?"
+                tools:text="@string/default_question"
                 android:textColor="@color/text_black"
                 android:textSize="24sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- 면접관 이미지 -->
         <FrameLayout
             android:layout_width="280dp"
             android:layout_height="280dp"
@@ -84,13 +82,13 @@
                 android:layout_gravity="center"
                 android:background="@drawable/bg_circle_image"
                 android:clickable="true"
-                android:contentDescription="면접관 사진 선택"
+                android:contentDescription="@string/interviewer_image"
                 android:focusable="true"
                 android:padding="4dp"
                 android:scaleType="centerCrop"
                 android:src="@drawable/interviewer"
                 app:shapeAppearanceOverlay="@style/CircleImageStyle"
-                app:strokeColor="#EDEDED"
+                app:strokeColor="@color/card_stroke"
                 app:strokeWidth="4dp" />
 
             <androidx.appcompat.widget.AppCompatImageButton
@@ -101,14 +99,13 @@
                 android:layout_marginTop="18dp"
                 android:layout_marginEnd="0dp"
                 android:background="@drawable/bg_image_add_button"
-                android:contentDescription="갤러리에서 면접관 사진 선택"
+                android:contentDescription="@string/choose_interviewer_image"
                 android:elevation="8dp"
                 android:padding="10dp"
                 android:src="@drawable/ic_add"
                 app:tint="@color/white" />
         </FrameLayout>
 
-        <!-- Listening 표시 -->
         <TextView
             android:id="@+id/listeningTextView"
             android:layout_width="wrap_content"
@@ -116,15 +113,14 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="-18dp"
             android:background="@drawable/bg_card"
-            android:paddingLeft="28dp"
+            android:paddingStart="28dp"
             android:paddingTop="12dp"
-            android:paddingRight="28dp"
+            android:paddingEnd="28dp"
             android:paddingBottom="12dp"
-            android:text="Listening..."
+            android:text="@string/answer_ready"
             android:textColor="@color/text_black"
             android:textSize="18sp" />
 
-        <!-- 답변 입력 -->
         <EditText
             android:id="@+id/answerEditText"
             android:layout_width="match_parent"
@@ -132,13 +128,12 @@
             android:layout_marginTop="40dp"
             android:background="@drawable/bg_card"
             android:gravity="top"
-            android:hint="편안하게 본인의 생각을 말씀해 주세요. 준비가 되시면 '답변하기' 버튼을 눌러 주세요."
+            android:hint="@string/answer_hint"
             android:inputType="textMultiLine"
             android:padding="18dp"
             android:textColor="@color/text_black"
             android:textSize="16sp" />
 
-        <!-- 답변하기 버튼 -->
         <Button
             android:id="@+id/speechButton"
             android:layout_width="match_parent"
@@ -147,12 +142,11 @@
             android:background="@drawable/bg_blue_button"
             android:backgroundTint="@null"
             app:backgroundTint="@null"
-            android:text="답변하기"
-            android:textColor="#FFFFFF"
+            android:text="@string/start_answer"
+            android:textColor="@color/white"
             android:textSize="22sp"
             android:textStyle="bold" />
 
-        <!-- 분석하기 버튼 -->
         <Button
             android:id="@+id/analyzeButton"
             android:layout_width="match_parent"
@@ -161,7 +155,7 @@
             android:background="@drawable/bg_outline_button"
             android:backgroundTint="@null"
             app:backgroundTint="@null"
-            android:text="분석하기"
+            android:text="@string/analyze_answer"
             android:textColor="@color/main_blue"
             android:textSize="22sp"
             android:textStyle="bold" />

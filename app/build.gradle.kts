@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("com.google.gms.google-services")
-    id("kotlin-parcelize")
 }
 
 val localProperties = Properties().apply {
@@ -72,7 +71,6 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.0.0"))
 
     // Firebase
-    implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-firestore")
 
     implementation("org.tensorflow:tensorflow-lite:2.7.0")

@@ -20,7 +20,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="뒤로가기"
+            android:contentDescription="@string/back"
             android:padding="8dp"
             android:src="@drawable/ic_arrow_back"
             app:tint="@color/main_blue"
@@ -33,7 +33,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
-            android:text="AI Interview Trainer"
+            android:text="@string/app_name"
             android:textColor="@color/main_blue"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -64,7 +64,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="AI가 당신의 공고를\n분석합니다."
+                android:text="@string/job_heading"
                 android:textColor="@color/text_black"
                 android:textSize="28sp"
                 android:textStyle="bold"
@@ -74,7 +74,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="지원하시려는 채용 공고의 상세 페이지\nURL을 아래에 입력해 주세요."
+                android:text="@string/job_subtitle"
                 android:textColor="@color/text_gray"
                 android:textSize="15sp"
                 android:lineSpacingExtra="4dp" />
@@ -83,10 +83,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
-                app:cardBackgroundColor="#FFFFFF"
+                app:cardBackgroundColor="@color/white"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
-                app:strokeColor="#E5E8EB"
+                app:strokeColor="@color/card_stroke"
                 app:strokeWidth="1dp">
 
                 <LinearLayout
@@ -118,7 +118,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="준비 사항"
+                            android:text="@string/requirements"
                             android:textColor="@color/text_black"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -127,7 +127,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
-                            android:text="• 사람인, 원티드, 링크드인 등 지원 공고"
+                            android:text="@string/requirement_sites"
                             android:textColor="@color/text_gray"
                             android:textSize="13sp" />
 
@@ -135,7 +135,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="• 자격 요건 및 우대 사항이 포함된 링크"
+                            android:text="@string/requirement_details"
                             android:textColor="@color/text_gray"
                             android:textSize="13sp" />
                     </LinearLayout>
@@ -146,10 +146,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                app:cardBackgroundColor="#FFFFFF"
+                app:cardBackgroundColor="@color/white"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
-                app:strokeColor="#E5E8EB"
+                app:strokeColor="@color/card_stroke"
                 app:strokeWidth="1dp">
 
                 <LinearLayout
@@ -173,7 +173,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="PUBLIC JOB LINK"
+                            android:text="@string/public_job_link"
                             android:textColor="@color/main_blue"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -186,12 +186,12 @@
                         android:layout_marginTop="12dp"
                         android:background="@drawable/bg_edittext_gray"
                         android:gravity="top|start"
-                        android:hint="채용 공고 링크를 붙여넣으세요"
+                        android:hint="@string/job_url_hint"
                         android:importantForAutofill="no"
                         android:inputType="textUri|textMultiLine"
                         android:padding="16dp"
                         android:textColor="@color/text_black"
-                        android:textColorHint="#B0B8C1"
+                        android:textColorHint="@color/text_gray"
                         android:textSize="14sp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -218,7 +218,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:gravity="center"
-                    android:text="AI가 공고에서 주요 역량 키워드를\n자동으로 추출합니다."
+                    android:text="@string/job_ai_hint"
                     android:textColor="@color/main_blue"
                     android:textSize="12sp"
                     android:textStyle="bold"
@@ -234,8 +234,8 @@
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="24dp"
-        android:text="질문 생성하기"
-        android:textColor="#FFFFFF"
+        android:text="@string/generate_questions"
+        android:textColor="@color/white"
         android:textSize="16sp"
         android:textStyle="bold"
         app:backgroundTint="@color/main_blue"
@@ -281,7 +281,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:gravity="center"
-                android:text="채용 공고를 분석하고 있습니다"
+                android:text="@string/analyzing_job"
                 android:textColor="@color/text_black"
                 android:textSize="15sp"
                 android:textStyle="bold" />

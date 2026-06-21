@@ -11,7 +11,6 @@ import com.example.aiinterviewtrainer.network.GeminiGenerationConfig
 import com.example.aiinterviewtrainer.network.GeminiPart
 import com.example.aiinterviewtrainer.network.NetworkClient
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.CancellationException
 import java.net.SocketTimeoutException
@@ -90,10 +89,6 @@ object InterviewQuestionRepository {
         )
     }
 
-    suspend fun getQuestions(context: Context, jdText: String): List<InterviewQuestion> {
-        return generateInterview(context, jdText).questions
-    }
-
     private fun createFallbackInterview(): GeneratedInterview {
         return GeneratedInterview(
             practiceTitle = "기본 직무 면접 연습",
@@ -155,19 +150,6 @@ object InterviewQuestionRepository {
             apiKey = apiKey,
             request = request
         )
-    }
-
-    fun questionsToJson(questions: List<InterviewQuestion>): String {
-        return gson.toJson(questions)
-    }
-
-    fun questionsFromJson(json: String?): List<InterviewQuestion> {
-        if (json.isNullOrBlank()) return emptyList()
-
-        return runCatching {
-            val type = object : TypeToken<List<InterviewQuestion>>() {}.type
-            gson.fromJson<List<InterviewQuestion>>(json, type).orEmpty()
-        }.getOrDefault(emptyList())
     }
 
     private fun parseGeneratedInterview(rawText: String): GeminiQuestionResponse {

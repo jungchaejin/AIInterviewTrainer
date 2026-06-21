@@ -40,7 +40,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
-                android:text="AI Interview Trainer"
+                android:text="@string/app_name"
                 android:textColor="@color/main_blue"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -58,7 +58,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
-            android:text="안녕하세요, 지원자님!"
+            android:text="@string/main_greeting"
             android:textColor="@color/text_black"
             android:textSize="28sp"
             android:textStyle="bold" />
@@ -69,7 +69,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:lineSpacingExtra="4dp"
-            android:text="오늘도 실전 같은 연습으로 면접 자신감을 키워보세요."
+            android:text="@string/main_subtitle"
             android:textColor="@color/text_gray"
             android:textSize="15sp" />
 
@@ -101,7 +101,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
-                    android:text="면접 연습 생성하기"
+                    android:text="@string/create_practice"
                     android:textColor="@color/white"
                     android:textSize="21sp"
                     android:textStyle="bold" />
@@ -148,7 +148,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
                     android:layout_weight="1"
-                    android:text="연습 기록 확인하기"
+                    android:text="@string/view_history"
                     android:textColor="@color/text_black"
                     android:textSize="18sp"
                     android:textStyle="bold" />

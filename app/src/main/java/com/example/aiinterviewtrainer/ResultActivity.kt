@@ -42,7 +42,7 @@ class ResultActivity : AppCompatActivity() {
         if (questionId.isNotBlank() && answerId.isNotBlank()) {
             isHistoricalResult = true
             findViewById<android.widget.ImageView>(R.id.backTextView).setOnClickListener { finish() }
-            findViewById<TextView>(R.id.feedbackTextView).text = "저장된 분석 결과를 불러오는 중입니다."
+            findViewById<TextView>(R.id.feedbackTextView).setText(R.string.saved_result_loading)
             loadSavedAnalysis(practiceId, questionId, answerId)
             return
         }
@@ -76,8 +76,16 @@ class ResultActivity : AppCompatActivity() {
 
         findViewById<TextView>(R.id.questionResultTextView).text = analysis.question
         findViewById<TextView>(R.id.answerResultTextView).text = analysis.answer
-        findViewById<TextView>(R.id.lengthTextView).text = analysis.answerLength.toString()
-        findViewById<TextView>(R.id.timeTextView).text = analysis.answerSeconds.toString()
+        findViewById<TextView>(R.id.lengthTextView).text = String.format(
+            Locale.getDefault(),
+            "%d",
+            analysis.answerLength
+        )
+        findViewById<TextView>(R.id.timeTextView).text = String.format(
+            Locale.getDefault(),
+            "%d",
+            analysis.answerSeconds
+        )
 
         bindKeywords(analysis)
         bindStarStatus(R.id.situationStatusTextView, R.id.situationBadge, analysis.situationStatus)
@@ -86,7 +94,10 @@ class ResultActivity : AppCompatActivity() {
         bindStarStatus(R.id.resultStatusTextView, R.id.resultBadge, analysis.resultStatus)
         findViewById<TextView>(R.id.qualityGradeTextView).text = analysis.mlPrediction.grade
         findViewById<TextView>(R.id.qualityConfidenceTextView).text =
-            "예측 신뢰도 ${(analysis.mlPrediction.confidence * 100).roundToInt()}%"
+            getString(
+                R.string.prediction_confidence_format,
+                (analysis.mlPrediction.confidence * 100).roundToInt()
+            )
         findViewById<TextView>(R.id.feedbackTextView).text = analysis.feedback
     }
 

@@ -13,6 +13,7 @@
     <ImageView
         android:layout_width="16dp"
         android:layout_height="16dp"
+        android:contentDescription="@null"
         tools:src="@android:drawable/ic_menu_recent_history"
         app:tint="#8B95A1" />
 

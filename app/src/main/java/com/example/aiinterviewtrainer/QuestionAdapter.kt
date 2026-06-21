@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.aiinterviewtrainer.contract.QuestionActivityContract
 import com.example.aiinterviewtrainer.databinding.ItemQuestionBinding
-import com.example.aiinterviewtrainer.model.InterviewQuestion // 🌟 파이어베이스 데이터 모델 경로
+import com.example.aiinterviewtrainer.model.InterviewQuestion
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import java.text.SimpleDateFormat
@@ -15,37 +15,34 @@ import java.util.Locale
 
 class QuestionAdapter(
     private val questionList: List<InterviewQuestion>,
-    private val practiceId: String // 🌟 인텐트 이동에 필요한 고유 ID를 생성자에서 추가로 받습니다.
+    private val practiceId: String
 ) : RecyclerView.Adapter<QuestionAdapter.QuestionViewHolder>() {
 
-    inner class QuestionViewHolder(val binding: ItemQuestionBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class QuestionViewHolder(private val binding: ItemQuestionBinding) :
+        RecyclerView.ViewHolder(binding.root) {
         fun bind(item: InterviewQuestion, position: Int) {
-
-            // 1. 질문 번호 및 내용 설정 (기존 로직 유지)
-            binding.tvQuestionNumber.text = (position + 1).toString()
+            binding.tvQuestionNumber.text = binding.root.context.getString(
+                R.string.question_number_format,
+                position + 1
+            )
             binding.tvQuestionText.text = item.question
 
             val questionId = "q${item.id}"
             val historyAdapter = AnswerHistoryAdapter(emptyList())
-            binding.rvAnswerHistory.apply {
-                adapter = historyAdapter
-                layoutManager = LinearLayoutManager(binding.root.context)
-            }
-            loadAnswerHistory(questionId, historyAdapter)
+            binding.rvAnswerHistory.adapter = historyAdapter
+            binding.rvAnswerHistory.layoutManager = LinearLayoutManager(binding.root.context)
+            loadAnswerHistory(questionId, historyAdapter, binding.root.context)
 
-            // 3. 🌟 새 답변 작성하기 버튼 클릭 이벤트 (기존 로직 완벽 유지)
             binding.btnNewAnswer.setOnClickListener {
-                val viewContext = binding.root.context
-
-                // 기존에 정의해 두신 Contract와 매개변수를 그대로 연결합니다.
-                val intent = QuestionActivityContract.createAnswerIntent(
-                    context = viewContext,
-                    practiceId = practiceId,
-                    questionId = questionId,
-                    selectedQuestion = item
+                val context = binding.root.context
+                context.startActivity(
+                    QuestionActivityContract.createAnswerIntent(
+                        context = context,
+                        practiceId = practiceId,
+                        questionId = questionId,
+                        selectedQuestion = item
+                    )
                 )
-
-                viewContext.startActivity(intent)
             }
         }
     }
@@ -59,11 +56,12 @@ class QuestionAdapter(
         holder.bind(questionList[position], position)
     }
 
-    override fun getItemCount(): Int = questionList.size
+    override fun getItemCount() = questionList.size
 
     private fun loadAnswerHistory(
         questionId: String,
-        historyAdapter: AnswerHistoryAdapter
+        adapter: AnswerHistoryAdapter,
+        context: android.content.Context
     ) {
         FirebaseFirestore.getInstance()
             .collection("History")
@@ -75,18 +73,16 @@ class QuestionAdapter(
             .get()
             .addOnSuccessListener { result ->
                 val formatter = SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.getDefault())
-                val histories = result.documents.map { document ->
+                adapter.submitList(result.documents.map { document ->
                     val createdAt = document.getLong("createdAt") ?: 0L
-                    val dateText = document.getString("dateText")
-                        ?: formatter.format(Date(createdAt))
+                    val date = document.getString("dateText") ?: formatter.format(Date(createdAt))
                     HistoryData(
                         practiceId = practiceId,
                         questionId = questionId,
                         answerId = document.id,
-                        dateText = "$dateText 답변 기록 보기"
+                        dateText = context.getString(R.string.answer_history_format, date)
                     )
-                }
-                historyAdapter.submitList(histories)
+                })
             }
     }
 }

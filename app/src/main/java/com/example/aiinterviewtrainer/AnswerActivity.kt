@@ -3,7 +3,8 @@ package com.example.aiinterviewtrainer
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.ImageDecoder
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
@@ -51,7 +52,7 @@ class AnswerActivity : AppCompatActivity() {
     private var recordingThread: Thread? = null
     private var audioBuffer = ByteArrayOutputStream()
     private val audioBufferLock = Any()
-    private var question: String = DEFAULT_QUESTION
+    private var question: String = ""
     private var questionType: String = ""
     private var expectedKeywords: List<String> = emptyList()
     private var evaluationPoints: List<String> = emptyList()
@@ -71,7 +72,7 @@ class AnswerActivity : AppCompatActivity() {
         bindAppHomeTitle()
 
         question = intent.getStringExtra(EXTRA_QUESTION).orEmpty().ifBlank {
-            DEFAULT_QUESTION
+            getString(R.string.default_question)
         }
         practiceId = intent.getStringExtra(EXTRA_PRACTICE_ID).orEmpty().ifBlank {
             System.currentTimeMillis().toString()
@@ -89,7 +90,7 @@ class AnswerActivity : AppCompatActivity() {
         interviewerImageView = findViewById(R.id.interviewerImageView)
 
         questionTextView.text = question
-        listeningTextView.text = "답변 준비 중"
+        listeningTextView.setText(R.string.answer_ready)
         loadSavedInterviewerImage()
 
         val openImagePicker = {
@@ -129,7 +130,7 @@ class AnswerActivity : AppCompatActivity() {
         ) {
             startGoogleSttRecording()
         } else if (requestCode == REQUEST_RECORD_AUDIO) {
-            Toast.makeText(this, "음성 답변을 사용하려면 마이크 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.microphone_permission_required, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -141,7 +142,7 @@ class AnswerActivity : AppCompatActivity() {
 
     private fun startGoogleSttRecording() {
         if (getGoogleSttApiKey().isBlank()) {
-            Toast.makeText(this, "local.properties에 Google STT API 키를 입력해 주세요.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, R.string.stt_key_required, Toast.LENGTH_LONG).show()
             return
         }
 
@@ -174,7 +175,7 @@ class AnswerActivity : AppCompatActivity() {
         if (recorder?.state != AudioRecord.STATE_INITIALIZED) {
             recorder?.release()
             recorder = null
-            Toast.makeText(this, "마이크를 시작할 수 없습니다.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.microphone_start_failed, Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -183,8 +184,8 @@ class AnswerActivity : AppCompatActivity() {
         }
         isRecording.set(true)
         recorder?.startRecording()
-        listeningTextView.text = "Listening..."
-        speechButton.text = "답변 종료"
+        listeningTextView.setText(R.string.answer_listening)
+        speechButton.setText(R.string.stop_answer)
 
         recordingThread = Thread {
             val buffer = ByteArray(bufferSize)
@@ -238,19 +239,23 @@ class AnswerActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val drawableResult = runCatching {
                 withContext(Dispatchers.IO) {
-                    val source = ImageDecoder.createSource(contentResolver, uri)
-                    ImageDecoder.decodeDrawable(source) { decoder, info, _ ->
-                        val width = info.size.width
-                        val height = info.size.height
-                        val longestEdge = maxOf(width, height)
-                        if (longestEdge > MAX_INTERVIEWER_IMAGE_SIZE) {
-                            val scale = MAX_INTERVIEWER_IMAGE_SIZE.toFloat() / longestEdge.toFloat()
-                            decoder.setTargetSize(
-                                (width * scale).toInt().coerceAtLeast(1),
-                                (height * scale).toInt().coerceAtLeast(1)
-                            )
-                        }
+                    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    contentResolver.openInputStream(uri)?.use { stream ->
+                        BitmapFactory.decodeStream(stream, null, bounds)
                     }
+                    require(bounds.outWidth > 0 && bounds.outHeight > 0)
+
+                    var sampleSize = 1
+                    while (bounds.outWidth / sampleSize > MAX_INTERVIEWER_IMAGE_SIZE ||
+                        bounds.outHeight / sampleSize > MAX_INTERVIEWER_IMAGE_SIZE
+                    ) {
+                        sampleSize *= 2
+                    }
+                    val options = BitmapFactory.Options().apply { inSampleSize = sampleSize }
+                    val bitmap = contentResolver.openInputStream(uri)?.use { stream ->
+                        BitmapFactory.decodeStream(stream, null, options)
+                    } ?: error("Image decode failed")
+                    BitmapDrawable(resources, bitmap)
                 }
             }
 
@@ -265,7 +270,7 @@ class AnswerActivity : AppCompatActivity() {
                 if (showFailureMessage) {
                     Toast.makeText(
                         this@AnswerActivity,
-                        "선택한 사진을 불러올 수 없습니다.",
+                        getString(R.string.image_load_failed),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -287,27 +292,27 @@ class AnswerActivity : AppCompatActivity() {
         )
 
         if (audioBytes.isEmpty()) {
-            listeningTextView.text = "답변 준비 중"
-            speechButton.text = "답변하기"
-            Toast.makeText(this, "녹음된 답변이 없습니다.", Toast.LENGTH_SHORT).show()
+            listeningTextView.setText(R.string.answer_ready)
+            speechButton.setText(R.string.start_answer)
+            Toast.makeText(this, R.string.no_recorded_answer, Toast.LENGTH_SHORT).show()
             return
         }
 
         if (audioStats.durationSeconds < MIN_AUDIO_SECONDS) {
-            listeningTextView.text = "답변 준비 중"
-            speechButton.text = "답변하기"
-            Toast.makeText(this, "답변을 조금 더 길게 녹음해 주세요.", Toast.LENGTH_SHORT).show()
+            listeningTextView.setText(R.string.answer_ready)
+            speechButton.setText(R.string.start_answer)
+            Toast.makeText(this, R.string.record_longer, Toast.LENGTH_SHORT).show()
             return
         }
 
         if (audioStats.peak < MIN_PEAK_AMPLITUDE) {
-            listeningTextView.text = "답변 준비 중"
-            speechButton.text = "답변하기"
-            Toast.makeText(this, "소리가 너무 작게 녹음됐습니다. 마이크 가까이에서 말해 주세요.", Toast.LENGTH_SHORT).show()
+            listeningTextView.setText(R.string.answer_ready)
+            speechButton.setText(R.string.start_answer)
+            Toast.makeText(this, R.string.record_louder, Toast.LENGTH_SHORT).show()
             return
         }
 
-        listeningTextView.text = "답변 변환 중"
+        listeningTextView.setText(R.string.answer_converting)
         speechButton.isEnabled = false
 
         executor.execute {
@@ -317,22 +322,22 @@ class AnswerActivity : AppCompatActivity() {
 
             mainHandler.post {
                 speechButton.isEnabled = true
-                speechButton.text = "답변하기"
+                speechButton.setText(R.string.start_answer)
 
                 result.onSuccess { transcript ->
                     if (transcript.isBlank()) {
-                        listeningTextView.text = "답변 준비 중"
-                        Toast.makeText(this, "음성을 인식하지 못했습니다.", Toast.LENGTH_SHORT).show()
+                        listeningTextView.setText(R.string.answer_ready)
+                        Toast.makeText(this, R.string.speech_not_recognized, Toast.LENGTH_SHORT).show()
                     } else {
                         answerEditText.setText(transcript)
                         answerEditText.setSelection(transcript.length)
-                        listeningTextView.text = "답변 입력 완료"
+                        listeningTextView.setText(R.string.answer_complete)
                     }
                 }.onFailure { exception ->
-                    listeningTextView.text = "답변 준비 중"
+                    listeningTextView.setText(R.string.answer_ready)
                     Toast.makeText(
                         this,
-                        exception.message ?: "텍스트 변환에 실패했습니다.",
+                        exception.message ?: getString(R.string.stt_failed),
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -456,7 +461,7 @@ class AnswerActivity : AppCompatActivity() {
         val answer = answerEditText.text.toString().trim()
 
         if (answer.isBlank()) {
-            Toast.makeText(this, "답변을 입력한 뒤 분석해 주세요.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.answer_required, Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -502,7 +507,6 @@ class AnswerActivity : AppCompatActivity() {
         private const val PREFS_INTERVIEWER = "interviewer_image_prefs"
         private const val KEY_INTERVIEWER_URI = "interviewer_image_uri"
         private const val MAX_INTERVIEWER_IMAGE_SIZE = 1_024
-        private const val DEFAULT_QUESTION = "HR 직무에서 가장 중요하다고 생각하는 역량은 무엇인가요?"
     }
 
     private data class AudioStats(

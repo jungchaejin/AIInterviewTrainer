@@ -29,15 +29,11 @@ class JobSelectActivity : AppCompatActivity() {
         setContentView(binding.root)
         bindAppHomeTitle()
 
-        // 뒤로가기 버튼
         binding.btnBack.setOnClickListener {
             finish()
         }
 
-        // 웹뷰 초기 설정
         setupWebView()
-
-        // 면접 질문 생성 버튼 클릭
         binding.btnGenerateQuestion.setOnClickListener {
             val url = binding.etJobUrl.text.toString().trim()
             if (url.isNotEmpty()) {
@@ -45,7 +41,7 @@ class JobSelectActivity : AppCompatActivity() {
                 isGenerating = true
                 binding.hiddenWebview.loadUrl(url)
             } else {
-                Toast.makeText(this, "URL을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.url_required, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -66,7 +62,11 @@ class JobSelectActivity : AppCompatActivity() {
                             callApiAndNavigate(extractedJdText)
                         } else {
                             setLoadingState(false)
-                            Toast.makeText(this@JobSelectActivity, "텍스트를 추출하지 못했습니다.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this@JobSelectActivity,
+                                R.string.text_extract_failed,
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 }
@@ -77,7 +77,6 @@ class JobSelectActivity : AppCompatActivity() {
     private fun callApiAndNavigate(extractedJdText: String) {
         lifecycleScope.launch {
             try {
-                // API 호출로 질문 5개 받아오기
                 val generatedInterview = InterviewQuestionRepository.generateInterview(
                     context = this@JobSelectActivity,
                     jdText = extractedJdText
@@ -86,12 +85,11 @@ class JobSelectActivity : AppCompatActivity() {
                 if (generatedInterview.isFallback) {
                     Toast.makeText(
                         this@JobSelectActivity,
-                        "인터넷에 연결할 수 없어 기본 면접 질문 5개로 진행합니다.",
+                        getString(R.string.fallback_questions_notice),
                         Toast.LENGTH_LONG
                     ).show()
                 }
 
-                // 고유 ID 및 메타데이터 생성
                 val practiceId = System.currentTimeMillis().toString()
                 val jobTitle = generatedInterview.practiceTitle
                 val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
@@ -116,7 +114,7 @@ class JobSelectActivity : AppCompatActivity() {
                         setLoadingState(false)
                         Toast.makeText(
                             this@JobSelectActivity,
-                            "질문 저장 실패: ${exception.message}",
+                            getString(R.string.question_save_failed, exception.message.orEmpty()),
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -125,9 +123,12 @@ class JobSelectActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 setLoadingState(false)
                 val message = if (e is SocketTimeoutException) {
-                    "응답 시간이 초과되었습니다. 네트워크 상태를 확인한 뒤 다시 시도해 주세요."
+                    getString(R.string.request_timeout)
                 } else {
-                    "질문 생성 실패: ${e.message ?: "알 수 없는 오류"}"
+                    getString(
+                        R.string.question_generation_failed,
+                        e.message ?: getString(R.string.unknown_error)
+                    )
                 }
                 Toast.makeText(this@JobSelectActivity, message, Toast.LENGTH_LONG).show()
             }
@@ -146,7 +147,6 @@ class JobSelectActivity : AppCompatActivity() {
         val historyReference = firestore.collection("History").document(practiceId)
         val batch = firestore.batch()
 
-        // 상위 문서(History) 생성
         val historyMap = hashMapOf(
             "practiceId" to practiceId,
             "jobTitle" to jobTitle,
