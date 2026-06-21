@@ -18,23 +18,26 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <TextView
+            <ImageView
                 android:id="@+id/backTextView"
                 android:layout_width="40dp"
                 android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="←"
-                android:textColor="@color/main_blue"
-                android:textSize="32sp" />
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="뒤로가기"
+                android:padding="8dp"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/main_blue" />
 
             <TextView
+                android:id="@+id/appHomeTextView"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:layout_marginStart="12dp"
                 android:layout_weight="1"
-                android:gravity="center"
-                android:text="AI Interview Coach"
-                android:textColor="@color/text_black"
-                android:textSize="24sp"
+                android:gravity="center_vertical"
+                android:text="AI Interview Trainer"
+                android:textColor="@color/main_blue"
+                android:textSize="18sp"
                 android:textStyle="bold" />
         </LinearLayout>
 

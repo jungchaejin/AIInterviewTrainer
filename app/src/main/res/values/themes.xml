@@ -9,7 +9,6 @@
 
     <style name="CircleImageStyle">
         <item name="cornerFamily">rounded</item>
-    <style name="CircleImage">
         <item name="cornerSize">50%</item>
     </style>
 </resources>

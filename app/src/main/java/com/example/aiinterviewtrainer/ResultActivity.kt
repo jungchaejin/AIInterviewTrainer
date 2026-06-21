@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageButton
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -13,23 +12,41 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.aiinterviewtrainer.analysis.AnswerFeatureAnalysis
 import com.example.aiinterviewtrainer.analysis.FeatureExtractor
+import com.example.aiinterviewtrainer.analysis.StarAnalysisResult
+import com.example.aiinterviewtrainer.analysis.StarItemAnalysis
 import com.example.aiinterviewtrainer.repository.AnswerFeedbackRepository
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
-import org.json.JSONArray
-import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.roundToInt
 
 class ResultActivity : AppCompatActivity() {
     private lateinit var analysis: AnswerAnalysis
     private var isFeedbackLoading = false
+    private var isHistoricalResult = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_result)
+        bindAppHomeTitle()
 
         val practiceId = intent.getStringExtra(AnswerActivity.EXTRA_PRACTICE_ID).orEmpty().ifBlank {
             System.currentTimeMillis().toString()
         }
+        val questionId = intent.getStringExtra(AnswerActivity.EXTRA_QUESTION_ID).orEmpty()
+        val answerId = intent.getStringExtra(EXTRA_ANSWER_ID).orEmpty()
+
+        if (questionId.isNotBlank() && answerId.isNotBlank()) {
+            isHistoricalResult = true
+            findViewById<android.widget.ImageView>(R.id.backTextView).setOnClickListener { finish() }
+            findViewById<TextView>(R.id.feedbackTextView).text = "저장된 분석 결과를 불러오는 중입니다."
+            loadSavedAnalysis(practiceId, questionId, answerId)
+            return
+        }
+
         val question = intent.getStringExtra(AnswerActivity.EXTRA_QUESTION).orEmpty()
         val questionType = intent.getStringExtra(AnswerActivity.EXTRA_QUESTION_TYPE).orEmpty()
         val expectedKeywords = intent.getStringArrayListExtra(AnswerActivity.EXTRA_EXPECTED_KEYWORDS).orEmpty()
@@ -39,6 +56,7 @@ class ResultActivity : AppCompatActivity() {
 
         analysis = createTemporaryAnalysis(
             practiceId = practiceId,
+            questionId = questionId,
             question = question,
             questionType = questionType,
             expectedKeywords = expectedKeywords,
@@ -52,7 +70,7 @@ class ResultActivity : AppCompatActivity() {
     }
 
     private fun bindResult(analysis: AnswerAnalysis) {
-        findViewById<TextView>(R.id.backTextView).setOnClickListener {
+        findViewById<android.widget.ImageView>(R.id.backTextView).setOnClickListener {
             finish()
         }
 
@@ -73,10 +91,8 @@ class ResultActivity : AppCompatActivity() {
     }
 
     private fun bindKeywords(analysis: AnswerAnalysis) {
-        val firstRow = findViewById<LinearLayout>(R.id.keywordRow1)
-        val secondRow = findViewById<LinearLayout>(R.id.keywordRow2)
-        firstRow.removeAllViews()
-        secondRow.removeAllViews()
+        val keywordFlowLayout = findViewById<KeywordFlowLayout>(R.id.keywordFlowLayout)
+        keywordFlowLayout.removeAllViews()
 
         val includedKeywords = analysis.includedKeywords.map { it.trim().lowercase() }.toSet()
         val keywords = (
@@ -86,22 +102,21 @@ class ResultActivity : AppCompatActivity() {
             .filter { it.isNotBlank() }
             .distinctBy { it.lowercase() }
 
-        keywords.forEachIndexed { index, keyword ->
-            val targetRow = if (index < KEYWORDS_PER_ROW) firstRow else secondRow
+        keywords.forEach { keyword ->
             val isIncluded = keyword.lowercase() in includedKeywords
-            targetRow.addView(createKeywordChip(keyword, isIncluded, targetRow.childCount > 0))
+            keywordFlowLayout.addView(createKeywordChip(keyword, isIncluded))
         }
     }
 
     private fun createKeywordChip(
         keyword: String,
-        isIncluded: Boolean,
-        hasStartMargin: Boolean
+        isIncluded: Boolean
     ): TextView {
         return TextView(this).apply {
             text = keyword
             textSize = 12f
-            maxLines = 1
+            maxLines = 2
+            maxWidth = resources.displayMetrics.widthPixels - dp(80)
             setPadding(dp(12), dp(5), dp(12), dp(5))
             setBackgroundResource(if (isIncluded) R.drawable.bg_chip_blue else R.drawable.bg_chip_gray)
             setTextColor(
@@ -110,12 +125,6 @@ class ResultActivity : AppCompatActivity() {
                     if (isIncluded) R.color.main_blue else R.color.keyword_missing_text
                 )
             )
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                if (hasStartMargin) marginStart = dp(8)
-            }
         }
     }
 
@@ -163,13 +172,17 @@ class ResultActivity : AppCompatActivity() {
     }
 
     private fun bindButtons() {
-        findViewById<TextView>(R.id.saveButton).setOnClickListener {
+        val saveButton = findViewById<TextView>(R.id.saveButton)
+        if (isHistoricalResult) {
+            saveButton.isEnabled = false
+            saveButton.text = "저장된 기록입니다"
+        }
+        saveButton.setOnClickListener {
             if (isFeedbackLoading) {
                 Toast.makeText(this, "종합 피드백을 생성하고 있습니다.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             saveAnalysis(analysis)
-            Toast.makeText(this, "기록을 저장했습니다.", Toast.LENGTH_SHORT).show()
         }
 
         findViewById<TextView>(R.id.retryButton).setOnClickListener {
@@ -221,6 +234,7 @@ class ResultActivity : AppCompatActivity() {
 
     private fun createTemporaryAnalysis(
         practiceId: String,
+        questionId: String,
         question: String,
         questionType: String,
         expectedKeywords: List<String>,
@@ -250,7 +264,9 @@ class ResultActivity : AppCompatActivity() {
         }
 
         return AnswerAnalysis(
+            answerId = System.currentTimeMillis().toString(),
             practiceId = practiceId,
+            questionId = questionId,
             question = question.ifBlank { "질문 정보가 없습니다." },
             questionType = questionType,
             expectedKeywords = keywordBasis,
@@ -271,43 +287,197 @@ class ResultActivity : AppCompatActivity() {
         )
     }
 
-    private fun saveAnalysis(analysis: AnswerAnalysis) {
-        val preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        val history = JSONArray(preferences.getString(KEY_HISTORY, "[]"))
+    private fun loadSavedAnalysis(practiceId: String, questionId: String, answerId: String) {
+        FirebaseFirestore.getInstance()
+            .collection("History")
+            .document(practiceId)
+            .collection("Questions")
+            .document(questionId)
+            .collection("Answers")
+            .document(answerId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (!document.exists()) {
+                    Toast.makeText(this, "저장된 답변 기록을 찾을 수 없습니다.", Toast.LENGTH_LONG).show()
+                    finish()
+                    return@addOnSuccessListener
+                }
 
-        history.put(
-            JSONObject()
-                .put("practiceId", analysis.practiceId)
-                .put("question", analysis.question)
-                .put("questionType", analysis.questionType)
-                .put("expectedKeywords", JSONArray(analysis.expectedKeywords))
-                .put("evaluationPoints", JSONArray(analysis.evaluationPoints))
-                .put("answer", analysis.answer)
-                .put("answerLength", analysis.answerLength)
-                .put("answerSeconds", analysis.answerSeconds)
-                .put("includedKeywords", JSONArray(analysis.includedKeywords))
-                .put("missingKeywords", JSONArray(analysis.missingKeywords))
-                .put("situationStatus", analysis.situationStatus)
-                .put("taskStatus", analysis.taskStatus)
-                .put("actionStatus", analysis.actionStatus)
-                .put("resultStatus", analysis.resultStatus)
-                .put("starScore", analysis.featureAnalysis.starAnalysis.normalizedScore.toDouble())
-                .put("answerLengthScore", analysis.featureAnalysis.answerLengthScore.toDouble())
-                .put("answerTimeScore", analysis.featureAnalysis.answerTimeScore.toDouble())
-                .put("keywordMatchRate", analysis.featureAnalysis.keywordMatchRate.toDouble())
-                .put("hasNumber", analysis.featureAnalysis.hasNumber.toDouble())
-                .put("concretenessScore", analysis.featureAnalysis.concretenessScore.toDouble())
-                .put("modelInput", JSONArray(analysis.featureAnalysis.toModelInput().toList()))
-                .put("mlPredictionGrade", analysis.mlPrediction.grade)
-                .put("mlPredictionConfidence", analysis.mlPrediction.confidence.toDouble())
-                .put("mlPredictionProbabilities", JSONArray(analysis.mlPrediction.probabilities))
-                .put("feedback", analysis.feedback)
-                .put("createdAt", analysis.createdAt)
+                analysis = createSavedAnalysis(document, practiceId, questionId, answerId)
+                bindResult(analysis)
+                bindButtons()
+            }
+            .addOnFailureListener { exception ->
+                Toast.makeText(
+                    this,
+                    "답변 기록 불러오기 실패: ${exception.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+                finish()
+            }
+    }
+
+    private fun createSavedAnalysis(
+        document: DocumentSnapshot,
+        practiceId: String,
+        questionId: String,
+        answerId: String
+    ): AnswerAnalysis {
+        val situationStatus = document.getString("situationStatus") ?: "부족"
+        val taskStatus = document.getString("taskStatus") ?: "부족"
+        val actionStatus = document.getString("actionStatus") ?: "부족"
+        val resultStatus = document.getString("resultStatus") ?: "부족"
+        val starAnalysis = StarAnalysisResult(
+            situation = savedStarItem("Situation", situationStatus),
+            task = savedStarItem("Task", taskStatus),
+            action = savedStarItem("Action", actionStatus),
+            result = savedStarItem("Result", resultStatus)
+        )
+        val answer = document.getString("answer").orEmpty()
+        val expectedKeywords = readStringList(document.get("expectedKeywords"))
+        val includedKeywords = readStringList(document.get("includedKeywords"))
+        val missingKeywords = readStringList(document.get("missingKeywords"))
+        val answerLength = document.getLong("answerLength")?.toInt() ?: answer.length
+        val answerSeconds = document.getLong("answerSeconds")?.toInt() ?: 0
+        val featureAnalysis = AnswerFeatureAnalysis(
+            answerLength = answerLength,
+            answerSeconds = answerSeconds,
+            includedKeywords = includedKeywords,
+            missingKeywords = missingKeywords,
+            keywordMatchRate = document.getDouble("keywordMatchRate")?.toFloat() ?: 0f,
+            starAnalysis = starAnalysis,
+            answerLengthScore = document.getDouble("answerLengthScore")?.toFloat() ?: 0f,
+            answerTimeScore = document.getDouble("answerTimeScore")?.toFloat() ?: 0f,
+            hasNumber = document.getDouble("hasNumber")?.toFloat() ?: 0f,
+            concretenessScore = document.getDouble("concretenessScore")?.toFloat() ?: 0f
+        )
+        val probabilities = (document.get("mlPredictionProbabilities") as? List<*>)
+            .orEmpty()
+            .mapNotNull { (it as? Number)?.toFloat() }
+
+        return AnswerAnalysis(
+            answerId = answerId,
+            practiceId = practiceId,
+            questionId = questionId,
+            question = document.getString("question").orEmpty(),
+            questionType = document.getString("questionType").orEmpty(),
+            expectedKeywords = expectedKeywords,
+            evaluationPoints = readStringList(document.get("evaluationPoints")),
+            answer = answer,
+            answerLength = answerLength,
+            answerSeconds = answerSeconds,
+            includedKeywords = includedKeywords,
+            missingKeywords = missingKeywords,
+            situationStatus = situationStatus,
+            taskStatus = taskStatus,
+            actionStatus = actionStatus,
+            resultStatus = resultStatus,
+            featureAnalysis = featureAnalysis,
+            mlPrediction = MlPredictionResult(
+                grade = document.getString("mlPredictionGrade") ?: "정보 없음",
+                confidence = document.getDouble("mlPredictionConfidence")?.toFloat() ?: 0f,
+                probabilities = probabilities
+            ),
+            feedback = document.getString("feedback").orEmpty(),
+            createdAt = document.getLong("createdAt") ?: 0L
+        )
+    }
+
+    private fun savedStarItem(label: String, status: String): StarItemAnalysis {
+        val score = when (status) {
+            "충분", "포함" -> 25
+            "일부 포함" -> 10
+            else -> 0
+        }
+        return StarItemAnalysis(label, status, score, emptyList())
+    }
+
+    private fun readStringList(value: Any?): List<String> {
+        return when (value) {
+            is String -> value
+                .removeSurrounding("[", "]")
+                .split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+            is List<*> -> value.mapNotNull { it?.toString()?.trim() }.filter { it.isNotEmpty() }
+            else -> emptyList()
+        }
+    }
+
+    private fun saveAnalysis(analysis: AnswerAnalysis) {
+        if (analysis.questionId.isBlank()) {
+            Toast.makeText(this, "질문 ID가 없어 기록을 저장할 수 없습니다.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val answerData = hashMapOf<String, Any>(
+            "answerId" to analysis.answerId,
+            "practiceId" to analysis.practiceId,
+            "questionId" to analysis.questionId,
+            "question" to analysis.question,
+            "questionType" to analysis.questionType,
+            "expectedKeywords" to analysis.expectedKeywords,
+            "evaluationPoints" to analysis.evaluationPoints,
+            "answer" to analysis.answer,
+            "answerLength" to analysis.answerLength,
+            "answerSeconds" to analysis.answerSeconds,
+            "includedKeywords" to analysis.includedKeywords,
+            "missingKeywords" to analysis.missingKeywords,
+            "situationStatus" to analysis.situationStatus,
+            "taskStatus" to analysis.taskStatus,
+            "actionStatus" to analysis.actionStatus,
+            "resultStatus" to analysis.resultStatus,
+            "starScore" to analysis.featureAnalysis.starAnalysis.normalizedScore.toDouble(),
+            "answerLengthScore" to analysis.featureAnalysis.answerLengthScore.toDouble(),
+            "answerTimeScore" to analysis.featureAnalysis.answerTimeScore.toDouble(),
+            "keywordMatchRate" to analysis.featureAnalysis.keywordMatchRate.toDouble(),
+            "hasNumber" to analysis.featureAnalysis.hasNumber.toDouble(),
+            "concretenessScore" to analysis.featureAnalysis.concretenessScore.toDouble(),
+            "modelInput" to analysis.featureAnalysis.toModelInput().map { it.toDouble() },
+            "mlPredictionGrade" to analysis.mlPrediction.grade,
+            "mlPredictionConfidence" to analysis.mlPrediction.confidence.toDouble(),
+            "mlPredictionProbabilities" to analysis.mlPrediction.probabilities.map { it.toDouble() },
+            "feedback" to analysis.feedback,
+            "createdAt" to analysis.createdAt,
+            "dateText" to SimpleDateFormat(
+                "yyyy.MM.dd HH:mm",
+                Locale.getDefault()
+            ).format(Date(analysis.createdAt))
         )
 
-        preferences.edit()
-            .putString(KEY_HISTORY, history.toString())
-            .apply()
+        val firestore = FirebaseFirestore.getInstance()
+        val questionReference = firestore.collection("History")
+            .document(analysis.practiceId)
+            .collection("Questions")
+            .document(analysis.questionId)
+        val answerReference = questionReference.collection("Answers")
+            .document(analysis.answerId)
+        val batch = firestore.batch()
+
+        batch.set(answerReference, answerData)
+        batch.update(
+            questionReference,
+            mapOf(
+                "userAnswer" to analysis.answer,
+                "feedback" to analysis.feedback
+            )
+        )
+        batch.commit()
+            .addOnSuccessListener {
+                isHistoricalResult = true
+                findViewById<TextView>(R.id.saveButton).apply {
+                    isEnabled = false
+                    text = "저장된 기록입니다"
+                }
+                Toast.makeText(this, "기록을 Firebase에 저장했습니다.", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { exception ->
+                Toast.makeText(
+                    this,
+                    "기록 저장 실패: ${exception.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
     }
 
     private fun openQuestionActivity(analysis: AnswerAnalysis) {
@@ -362,7 +532,9 @@ class ResultActivity : AppCompatActivity() {
     }
 
     private data class AnswerAnalysis(
+        val answerId: String,
         val practiceId: String,
+        val questionId: String,
         val question: String,
         val questionType: String,
         val expectedKeywords: List<String>,
@@ -383,9 +555,7 @@ class ResultActivity : AppCompatActivity() {
     )
 
     companion object {
+        const val EXTRA_ANSWER_ID = "extra_answer_id"
         private const val TAG = "ResultActivity"
-        private const val KEYWORDS_PER_ROW = 3
-        private const val PREFS_NAME = "interview_history_prefs"
-        private const val KEY_HISTORY = "interview_history"
     }
 }

@@ -2,6 +2,7 @@ package com.example.aiinterviewtrainer.repository
 
 import android.content.Context
 import com.example.aiinterviewtrainer.R
+import com.example.aiinterviewtrainer.model.GeneratedInterview
 import com.example.aiinterviewtrainer.model.InterviewQuestion
 import com.example.aiinterviewtrainer.network.GeminiContent
 import com.example.aiinterviewtrainer.network.GeminiGenerateContentRequest
@@ -10,11 +11,13 @@ import com.example.aiinterviewtrainer.network.GeminiPart
 import com.example.aiinterviewtrainer.network.NetworkClient
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.delay
+import java.net.SocketTimeoutException
 
 object InterviewQuestionRepository {
     private val gson = Gson()
 
-    suspend fun getQuestions(context: Context, jdText: String): List<InterviewQuestion> {
+    suspend fun generateInterview(context: Context, jdText: String): GeneratedInterview {
         val apiKey = context.getString(R.string.gemini_api_key).trim()
         val modelName = context.getString(R.string.gemini_model_name).trim()
 
@@ -25,29 +28,68 @@ object InterviewQuestionRepository {
             "채용공고 텍스트가 비어 있습니다."
         }
 
+        val normalizedJdText = jdText
+            .replace(Regex("[\\t ]+"), " ")
+            .replace(Regex("\\n{3,}"), "\n\n")
+            .trim()
+            .take(MAX_JD_TEXT_LENGTH)
         val request = GeminiGenerateContentRequest(
             contents = listOf(
                 GeminiContent(
-                    parts = listOf(GeminiPart(text = buildPrompt(jdText)))
+                    parts = listOf(GeminiPart(text = buildPrompt(normalizedJdText)))
                 )
             ),
             generationConfig = GeminiGenerationConfig()
         )
 
-        val response = NetworkClient.geminiApiService.generateContent(
-            model = modelName.ifBlank { DEFAULT_MODEL_NAME },
+        val response = requestQuestionsWithRetry(
+            modelName = modelName.ifBlank { DEFAULT_MODEL_NAME },
             apiKey = apiKey,
             request = request
         )
 
         val rawText = response.firstText()
-        val questions = parseQuestions(rawText)
+        val parsedResponse = parseGeneratedInterview(rawText)
+        val questions = parsedResponse.questions
 
         require(questions.size == QUESTION_COUNT) {
             "Gemini가 질문 ${QUESTION_COUNT}개를 반환하지 않았습니다."
         }
 
-        return questions
+        val practiceTitle = parsedResponse.practiceTitle
+            .orEmpty()
+            .replace(Regex("\\s+"), " ")
+            .trim()
+            .take(MAX_PRACTICE_TITLE_LENGTH)
+            .ifBlank { DEFAULT_PRACTICE_TITLE }
+
+        return GeneratedInterview(
+            practiceTitle = practiceTitle,
+            questions = questions
+        )
+    }
+
+    suspend fun getQuestions(context: Context, jdText: String): List<InterviewQuestion> {
+        return generateInterview(context, jdText).questions
+    }
+
+    private suspend fun requestQuestionsWithRetry(
+        modelName: String,
+        apiKey: String,
+        request: GeminiGenerateContentRequest
+    ) = try {
+        NetworkClient.geminiApiService.generateContent(
+            model = modelName,
+            apiKey = apiKey,
+            request = request
+        )
+    } catch (exception: SocketTimeoutException) {
+        delay(RETRY_DELAY_MILLIS)
+        NetworkClient.geminiApiService.generateContent(
+            model = modelName,
+            apiKey = apiKey,
+            request = request
+        )
     }
 
     fun questionsToJson(questions: List<InterviewQuestion>): String {
@@ -63,13 +105,16 @@ object InterviewQuestionRepository {
         }.getOrDefault(emptyList())
     }
 
-    private fun parseQuestions(rawText: String): List<InterviewQuestion> {
+    private fun parseGeneratedInterview(rawText: String): GeminiQuestionResponse {
         val jsonObjectText = extractJsonObject(rawText)
-        return gson.fromJson(jsonObjectText, GeminiQuestionResponse::class.java)
-            ?.questions
-            .orEmpty()
-            .filter { it.question.isNotBlank() }
-            .take(QUESTION_COUNT)
+        val parsed = gson.fromJson(jsonObjectText, GeminiQuestionResponse::class.java)
+        return GeminiQuestionResponse(
+            practiceTitle = parsed?.practiceTitle,
+            questions = parsed?.questions
+                .orEmpty()
+                .filter { it.question.isNotBlank() }
+                .take(QUESTION_COUNT)
+        )
     }
 
     private fun extractJsonObject(text: String): String {
@@ -101,6 +146,13 @@ object InterviewQuestionRepository {
             2. expectedKeywords (기대 키워드): 해당 직무와 질문을 고려했을 때, 역량이 뛰어난 지원자라면 답변에 반드시 포함했을 법한 핵심 기술/업무/역량 키워드를 5~6개 선정합니다. (예: 웹 개발 JD라면 '디버깅, API, 성능 개선', 마케팅 JD라면 '전환율, 코호트 분석, 성과 지표' 등)
             3. evaluationPoints (평가 포인트): 지원자의 답변에서 중점적으로 평가해야 하는 구체적인 체크리스트를 3~4개 정의합니다. (예: 문제 상황의 구체성, 본인의 구체적인 역할, 행동의 논리성, 성과 및 배운 점 등)
 
+            [면접 연습 이름 생성 원칙]
+            - 채용공고에서 회사명, 직무명, 채용 형태(인턴/신입/경력)를 파악하여 practiceTitle을 생성하십시오.
+            - "회사명 + 직무명 + 채용 형태 + 면접 연습" 순서의 자연스러운 한국어 제목으로 작성하십시오.
+            - 회사명이나 채용 형태를 확인할 수 없으면 확인 가능한 정보만 사용하십시오.
+            - 등급, 점수, Rank 표현은 포함하지 마십시오.
+            - 20자 이내로 간결하게 작성하십시오.
+
             [출력 형식 제한] - 시스템 연동을 위해 반드시 지켜야 할 철칙
             - 어떠한 인사말, 부연 설명, 맺음말도 작성하지 마십시오.
             - 마크다운 코드 블록(```json 등)을 포함하지 말고, 순수한 JSON 문자열(String)만 출력하십시오.
@@ -108,6 +160,7 @@ object InterviewQuestionRepository {
 
             [출력 형식]
             {
+              "practiceTitle": "네이버웹툰 HR 인턴 면접 연습",
               "questions": [
                 {
                   "id": 1,
@@ -135,9 +188,14 @@ object InterviewQuestionRepository {
     }
 
     private data class GeminiQuestionResponse(
-        val questions: List<InterviewQuestion>
+        val practiceTitle: String? = null,
+        val questions: List<InterviewQuestion> = emptyList()
     )
 
     private const val QUESTION_COUNT = 5
     private const val DEFAULT_MODEL_NAME = "gemini-2.5-flash"
+    private const val DEFAULT_PRACTICE_TITLE = "직무 맞춤 면접 연습"
+    private const val MAX_PRACTICE_TITLE_LENGTH = 30
+    private const val MAX_JD_TEXT_LENGTH = 50_000
+    private const val RETRY_DELAY_MILLIS = 1_500L
 }

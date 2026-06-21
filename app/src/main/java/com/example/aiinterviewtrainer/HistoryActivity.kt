@@ -1,7 +1,5 @@
 package com.example.aiinterviewtrainer
 
-import HistoryAdapter
-import android.app.DownloadManager
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -10,7 +8,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.aiinterviewtrainer.databinding.ActivityHistoryBinding
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.Query.Direction
 
 
 class HistoryActivity : AppCompatActivity() {
@@ -22,6 +19,7 @@ class HistoryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityHistoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        bindAppHomeTitle()
 
         binding.btnBack.setOnClickListener {
             finish()
@@ -36,7 +34,7 @@ class HistoryActivity : AppCompatActivity() {
         historyAdapter = HistoryAdapter { clickedItem ->
             // 🌟 아이템 클릭 시, 고유 ID(practiceId)만 Intent에 실어서 QuestionActivity로 이동!
             val intent = Intent(this@HistoryActivity, QuestionActivity::class.java).apply {
-                putExtra("EXTRA_PRACTICE_ID", clickedItem.id) // HistoryItem의 id 필드 사용
+                putExtra(AnswerActivity.EXTRA_PRACTICE_ID, clickedItem.id)
             }
             startActivity(intent)
         }

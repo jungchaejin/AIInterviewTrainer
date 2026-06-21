@@ -8,27 +8,44 @@
     android:background="#F8F9FC">
 
     <ImageView
-    android:id="@+id/btn_back"
-    android:layout_width="28dp"
-    android:layout_height="28dp"
-    android:layout_marginStart="20dp"
-    android:layout_marginTop="20dp"
-    tools:src="@android:drawable/ic_menu_revert"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent" />
+        android:id="@+id/btn_back"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="12dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="뒤로가기"
+        android:padding="8dp"
+        android:src="@drawable/ic_arrow_back"
+        app:tint="@color/main_blue"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/appHomeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:text="AI Interview Trainer"
+        android:textColor="@color/main_blue"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/btn_back"
+        app:layout_constraintStart_toEndOf="@id/btn_back"
+        app:layout_constraintTop_toTopOf="@id/btn_back" />
 
     <TextView
         android:id="@+id/tv_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
         android:text="면접 연습 기록"
         android:textColor="#1A1A1A"
         android:textSize="22sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/btn_back"
-        app:layout_constraintStart_toEndOf="@id/btn_back"
-        app:layout_constraintTop_toTopOf="@id/btn_back" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_back" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_history"

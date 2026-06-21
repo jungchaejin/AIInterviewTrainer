@@ -6,8 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
-    app:cardBackgroundColor="#FFFFFF"
-    app:cardCornerRadius="16dp"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="8dp"
     app:cardElevation="0dp"
     app:strokeColor="#E5E8EB"
     app:strokeWidth="1dp">
@@ -31,8 +31,9 @@
                 android:id="@+id/iv_icon"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                tools:src="@android:drawable/ic_menu_edit"
-                app:tint="#5B7FFF" />
+                android:contentDescription="@null"
+                android:src="@drawable/ic_mic"
+                app:tint="@color/main_blue" />
         </LinearLayout>
 
         <TextView
@@ -42,7 +43,7 @@
             android:layout_marginStart="16dp"
             android:ellipsize="end"
             android:maxLines="2"
-            android:textColor="#222222"
+            android:textColor="@color/text_black"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@id/tv_date"
@@ -68,7 +69,8 @@
             android:id="@+id/iv_arrow"
             android:layout_width="20dp"
             android:layout_height="20dp"
-            tools:src="@android:drawable/ic_media_next"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_chevron_right"
             app:tint="#B0B8C1"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

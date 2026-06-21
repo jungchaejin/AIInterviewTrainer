@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.aiinterviewtrainer.databinding.ItemAnswerHistoryBinding
 
 class AnswerHistoryAdapter(
-    private val historyList: List<HistoryData>
+    private var historyList: List<HistoryData>
 ) : RecyclerView.Adapter<AnswerHistoryAdapter.HistoryViewHolder>() {
 
     inner class HistoryViewHolder(val binding: ItemAnswerHistoryBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -18,6 +18,8 @@ class AnswerHistoryAdapter(
                 val context = binding.root.context
                 val intent = Intent(context, ResultActivity::class.java).apply {
                     putExtra(AnswerActivity.EXTRA_PRACTICE_ID, history.practiceId)
+                    putExtra(AnswerActivity.EXTRA_QUESTION_ID, history.questionId)
+                    putExtra(ResultActivity.EXTRA_ANSWER_ID, history.answerId)
                 }
                 context.startActivity(intent)
             }
@@ -34,4 +36,9 @@ class AnswerHistoryAdapter(
     }
 
     override fun getItemCount(): Int = historyList.size
+
+    fun submitList(histories: List<HistoryData>) {
+        historyList = histories
+        notifyDataSetChanged()
+    }
 }

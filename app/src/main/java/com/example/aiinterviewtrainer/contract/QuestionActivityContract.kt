@@ -31,10 +31,12 @@ object QuestionActivityContract {
     fun createAnswerIntent(
         context: Context,
         practiceId: String,
+        questionId: String,
         selectedQuestion: InterviewQuestion
     ): Intent {
         return Intent(context, AnswerActivity::class.java).apply {
             putExtra(EXTRA_PRACTICE_ID, practiceId)
+            putExtra(AnswerActivity.EXTRA_QUESTION_ID, questionId)
             putExtra(AnswerActivity.EXTRA_QUESTION, selectedQuestion.question)
             putExtra(AnswerActivity.EXTRA_QUESTION_TYPE, selectedQuestion.questionType)
             putStringArrayListExtra(

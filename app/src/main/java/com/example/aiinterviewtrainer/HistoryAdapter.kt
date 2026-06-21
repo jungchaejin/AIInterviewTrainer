@@ -1,10 +1,10 @@
-// HistoryAdapter.kt (참고용)
+package com.example.aiinterviewtrainer
+
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.aiinterviewtrainer.HistoryItem
 import com.example.aiinterviewtrainer.databinding.ItemHistoryBinding
 
 class HistoryAdapter(private val onClick: (HistoryItem) -> Unit) :

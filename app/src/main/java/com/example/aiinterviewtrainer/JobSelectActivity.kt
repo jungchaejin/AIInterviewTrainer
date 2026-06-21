@@ -9,11 +9,12 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.aiinterviewtrainer.databinding.ActivityJobSelectBinding
-import com.example.aiinterviewtrainer.network.InterviewQuestionRepository
 import com.example.aiinterviewtrainer.model.InterviewQuestion
+import com.example.aiinterviewtrainer.repository.InterviewQuestionRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.net.SocketTimeoutException
 import java.util.Date
 import java.util.Locale
 
@@ -26,6 +27,7 @@ class JobSelectActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityJobSelectBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        bindAppHomeTitle()
 
         // 뒤로가기 버튼
         binding.btnBack.setOnClickListener {
@@ -76,40 +78,67 @@ class JobSelectActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 // 1. API 호출로 질문 5개 받아오기
-                val questions = InterviewQuestionRepository.getQuestions(
+                val generatedInterview = InterviewQuestionRepository.generateInterview(
                     context = this@JobSelectActivity,
                     jdText = extractedJdText
                 )
+                val questions = generatedInterview.questions
 
                 // 2. 고유 ID 및 메타데이터 생성
                 val practiceId = System.currentTimeMillis().toString()
-                val jobTitle = "새로운 면접 연습"
+                val jobTitle = generatedInterview.practiceTitle
                 val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
-                // 3. 🌟 파이어베이스에 저장 실행 (백그라운드에서 알아서 처리됨)
-                saveToFirebase(practiceId, jobTitle, currentDate, questions)
-
-                // 로딩 끄기
-                setLoadingState(false)
-
-                // 4. 생성된 고유 ID만 Intent에 실어서 QuestionActivity 호출
-                val intent = Intent(this@JobSelectActivity, QuestionActivity::class.java).apply {
-                    putExtra("EXTRA_PRACTICE_ID", practiceId)
-                }
-                startActivity(intent)
-
-                // 현재 화면 종료
-                finish()
+                // 질문 저장이 끝난 뒤 화면을 열어 빈 목록이 보이는 경쟁 조건을 막습니다.
+                saveToFirebase(
+                    practiceId = practiceId,
+                    jobTitle = jobTitle,
+                    date = currentDate,
+                    questions = questions,
+                    onSuccess = {
+                        setLoadingState(false)
+                        val intent = Intent(
+                            this@JobSelectActivity,
+                            QuestionActivity::class.java
+                        ).apply {
+                            putExtra(AnswerActivity.EXTRA_PRACTICE_ID, practiceId)
+                        }
+                        startActivity(intent)
+                        finish()
+                    },
+                    onFailure = { exception ->
+                        setLoadingState(false)
+                        Toast.makeText(
+                            this@JobSelectActivity,
+                            "질문 저장 실패: ${exception.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                )
 
             } catch (e: Exception) {
                 setLoadingState(false)
-                Toast.makeText(this@JobSelectActivity, "오류 발생: ${e.message}", Toast.LENGTH_SHORT).show()
+                val message = if (e is SocketTimeoutException) {
+                    "Gemini 응답 시간이 초과되었습니다. 네트워크 상태를 확인한 뒤 다시 시도해 주세요."
+                } else {
+                    "질문 생성 실패: ${e.message ?: "알 수 없는 오류"}"
+                }
+                Toast.makeText(this@JobSelectActivity, message, Toast.LENGTH_LONG).show()
             }
         }
     }
 
-    private fun saveToFirebase(practiceId: String, jobTitle: String, date: String, questions: List<InterviewQuestion>) {
+    private fun saveToFirebase(
+        practiceId: String,
+        jobTitle: String,
+        date: String,
+        questions: List<InterviewQuestion>,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
         val firestore = FirebaseFirestore.getInstance()
+        val historyReference = firestore.collection("History").document(practiceId)
+        val batch = firestore.batch()
 
         // 1) 상위 문서(History) 생성
         val historyMap = hashMapOf(
@@ -118,24 +147,26 @@ class JobSelectActivity : AppCompatActivity() {
             "practiceDate" to date
         )
 
-        // 상위 문서 저장 후, 2) 하위 컬렉션(Questions)에 질문 5개 저장
-        firestore.collection("History").document(practiceId).set(historyMap)
-            .addOnSuccessListener {
-                questions.forEachIndexed { index, q ->
-                    val questionMap = hashMapOf(
-                        "questionText" to q.question,
-                        "keywords" to q.expectedKeywords,
-                        "userAnswer" to "",
-                        "feedback" to ""
-                    )
+        batch.set(historyReference, historyMap)
+        questions.forEachIndexed { index, question ->
+            val questionMap = hashMapOf(
+                "questionText" to question.question,
+                "questionType" to question.questionType,
+                "keywords" to question.expectedKeywords.joinToString(", "),
+                "evaluationPoints" to question.evaluationPoints,
+                "order" to index,
+                "userAnswer" to "",
+                "feedback" to ""
+            )
+            batch.set(
+                historyReference.collection("Questions").document("q$index"),
+                questionMap
+            )
+        }
 
-                    firestore.collection("History")
-                        .document(practiceId)
-                        .collection("Questions")
-                        .document("q$index")
-                        .set(questionMap)
-                }
-            }
+        batch.commit()
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { exception -> onFailure(exception) }
     }
 
     private fun setLoadingState(isLoading: Boolean) {

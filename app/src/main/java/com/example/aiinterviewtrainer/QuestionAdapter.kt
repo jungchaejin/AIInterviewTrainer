@@ -7,6 +7,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.aiinterviewtrainer.contract.QuestionActivityContract
 import com.example.aiinterviewtrainer.databinding.ItemQuestionBinding
 import com.example.aiinterviewtrainer.model.InterviewQuestion // 🌟 파이어베이스 데이터 모델 경로
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class QuestionAdapter(
     private val questionList: List<InterviewQuestion>,
@@ -20,14 +25,13 @@ class QuestionAdapter(
             binding.tvQuestionNumber.text = (position + 1).toString()
             binding.tvQuestionText.text = item.question
 
-            // 2. 🌟 답변 기록 리스트 세팅 (기존 로직 유지)
-            // 파이어베이스 구조에서는 아직 과거 기록 리스트를 담아오지 않으므로 임시로 빈 리스트를 주거나,
-            // 추후 필요 시 item.historyList 형태로 매핑해서 사용하도록 뼈대를 유지합니다.
-            val historyAdapter = AnswerHistoryAdapter(emptyList()) // 혹은 원래 쓰시던 HistoryData 리스트 연동
+            val questionId = "q${item.id}"
+            val historyAdapter = AnswerHistoryAdapter(emptyList())
             binding.rvAnswerHistory.apply {
                 adapter = historyAdapter
                 layoutManager = LinearLayoutManager(binding.root.context)
             }
+            loadAnswerHistory(questionId, historyAdapter)
 
             // 3. 🌟 새 답변 작성하기 버튼 클릭 이벤트 (기존 로직 완벽 유지)
             binding.btnNewAnswer.setOnClickListener {
@@ -36,8 +40,9 @@ class QuestionAdapter(
                 // 기존에 정의해 두신 Contract와 매개변수를 그대로 연결합니다.
                 val intent = QuestionActivityContract.createAnswerIntent(
                     context = viewContext,
-                    practiceId = practiceId, // 생성자로부터 넘겨받은 ID 사용
-                    selectedQuestion = item  // 파이어베이스에서 온 InterviewQuestion 객체 전달
+                    practiceId = practiceId,
+                    questionId = questionId,
+                    selectedQuestion = item
                 )
 
                 viewContext.startActivity(intent)
@@ -55,4 +60,33 @@ class QuestionAdapter(
     }
 
     override fun getItemCount(): Int = questionList.size
+
+    private fun loadAnswerHistory(
+        questionId: String,
+        historyAdapter: AnswerHistoryAdapter
+    ) {
+        FirebaseFirestore.getInstance()
+            .collection("History")
+            .document(practiceId)
+            .collection("Questions")
+            .document(questionId)
+            .collection("Answers")
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .get()
+            .addOnSuccessListener { result ->
+                val formatter = SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.getDefault())
+                val histories = result.documents.map { document ->
+                    val createdAt = document.getLong("createdAt") ?: 0L
+                    val dateText = document.getString("dateText")
+                        ?: formatter.format(Date(createdAt))
+                    HistoryData(
+                        practiceId = practiceId,
+                        questionId = questionId,
+                        answerId = document.id,
+                        dateText = "$dateText 답변 기록 보기"
+                    )
+                }
+                historyAdapter.submitList(histories)
+            }
+    }
 }

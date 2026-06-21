@@ -1,14 +1,12 @@
 package com.example.aiinterviewtrainer
 
 import android.os.Bundle
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.aiinterviewtrainer.databinding.ActivityQuestionBinding
 import com.example.aiinterviewtrainer.model.InterviewQuestion
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 
 class QuestionActivity : AppCompatActivity() {
     private lateinit var binding: ActivityQuestionBinding
@@ -22,9 +20,10 @@ class QuestionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityQuestionBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        bindAppHomeTitle()
 
         // 1. 인텐트로 넘어온 고유 ID 받기
-        practiceId = intent.getStringExtra("EXTRA_PRACTICE_ID")
+        practiceId = intent.getStringExtra(AnswerActivity.EXTRA_PRACTICE_ID)
 
         setupUI()
         setupRecyclerView()
@@ -75,23 +74,29 @@ class QuestionActivity : AppCompatActivity() {
             .addOnSuccessListener { result ->
                 val questionList = mutableListOf<InterviewQuestion>()
 
-                for (document in result) {
-                    val text = document.getString("questionText") ?: ""
-                    val keywords = document.getString("keywords") ?: ""
+                val documents = result.documents.sortedBy { document ->
+                    document.getLong("order")?.toInt()
+                        ?: document.id.removePrefix("q").toIntOrNull()
+                        ?: Int.MAX_VALUE
+                }
 
-                    // 만약 예상 키워드가 문자열로 저장되어 있다면 대괄호나 콤마를 제거하고 리스트화해줍니다.
-                    val keywordList = keywords.replace("[", "").replace("]", "")
-                        .split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                for (document in documents) {
+                    val text = document.getString("questionText") ?: ""
+                    val keywordList = readStringList(document.get("keywords"))
+                    val evaluationPoints = readStringList(document.get("evaluationPoints"))
+                    val questionOrder = document.getLong("order")?.toInt()
+                        ?: document.id.removePrefix("q").toIntOrNull()
+                        ?: questionList.size
 
                     // 우리가 정의한 네트워크 데이터 모델(InterviewQuestion) 형식으로 바인딩
                     // 🌟 모든 필수 파라미터에 값을 채워줍니다.
                     questionList.add(
                         InterviewQuestion(
-                            id = 0,                                 // id 기본값
+                            id = questionOrder,
                             question = text,
-                            questionType = "직무역량",               // 혹은 빈 문자열 ""
+                            questionType = document.getString("questionType") ?: "직무역량",
                             expectedKeywords = keywordList,
-                            evaluationPoints = emptyList()          // 빈 리스트 전달
+                            evaluationPoints = evaluationPoints
                         )
                     )
                 }
@@ -106,5 +111,17 @@ class QuestionActivity : AppCompatActivity() {
             .addOnFailureListener { exception ->
                 Toast.makeText(this, "질문을 불러오는데 실패했습니다: ${exception.message}", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    private fun readStringList(value: Any?): List<String> {
+        return when (value) {
+            is String -> value
+                .removeSurrounding("[", "]")
+                .split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+            is List<*> -> value.mapNotNull { it?.toString()?.trim() }.filter { it.isNotEmpty() }
+            else -> emptyList()
+        }
     }
 }

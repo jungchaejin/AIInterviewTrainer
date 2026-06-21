@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.aiinterviewtrainer"
-        minSdk = 30
+        minSdk = 23
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -61,6 +61,7 @@ android {
     }
     androidResources {
         noCompress += "tflite"
+    }
 
     buildFeatures {
         viewBinding = true
@@ -84,11 +85,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
-    implementation(libs.androidx.foundation.android)
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
 
-    // Gson & 기타
+    // Gson
     implementation("com.google.code.gson:gson:2.10.1")
-    implementation(libs.common)
 
     // Test
     testImplementation(libs.junit)

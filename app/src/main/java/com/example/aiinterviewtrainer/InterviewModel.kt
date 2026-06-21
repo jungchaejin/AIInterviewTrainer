@@ -16,5 +16,7 @@ data class QuestionData(
 
 data class HistoryData(
     val practiceId: String,
+    val questionId: String,
+    val answerId: String,
     val dateText: String
 )
