@@ -3,9 +3,11 @@ package com.example.aiinterviewtrainer
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.ImageDecoder
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -13,11 +15,17 @@ import android.util.Base64
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.OutputStreamWriter
@@ -33,6 +41,7 @@ class AnswerActivity : AppCompatActivity() {
     private lateinit var answerEditText: EditText
     private lateinit var listeningTextView: TextView
     private lateinit var speechButton: Button
+    private lateinit var interviewerImageView: ImageView
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val executor: ExecutorService = Executors.newSingleThreadExecutor()
@@ -49,6 +58,12 @@ class AnswerActivity : AppCompatActivity() {
     private var practiceId: String = ""
     private var questionId: String = ""
     private var answerStartedAt: Long = 0L
+
+    private val interviewerImagePicker = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) saveAndDisplayInterviewerImage(uri)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,9 +86,19 @@ class AnswerActivity : AppCompatActivity() {
         answerEditText = findViewById(R.id.answerEditText)
         listeningTextView = findViewById(R.id.listeningTextView)
         speechButton = findViewById(R.id.speechButton)
+        interviewerImageView = findViewById(R.id.interviewerImageView)
 
         questionTextView.text = question
         listeningTextView.text = "답변 준비 중"
+        loadSavedInterviewerImage()
+
+        val openImagePicker = {
+            interviewerImagePicker.launch(arrayOf("image/*"))
+        }
+        interviewerImageView.setOnClickListener { openImagePicker() }
+        findViewById<ImageView>(R.id.changeInterviewerImageButton).setOnClickListener {
+            openImagePicker()
+        }
 
         findViewById<android.widget.ImageView>(R.id.backTextView).setOnClickListener {
             finish()
@@ -174,6 +199,77 @@ class AnswerActivity : AppCompatActivity() {
         }.apply {
             name = "GoogleSttRecorder"
             start()
+        }
+    }
+
+    private fun saveAndDisplayInterviewerImage(uri: Uri) {
+        val preferences = getSharedPreferences(PREFS_INTERVIEWER, MODE_PRIVATE)
+        val previousUri = preferences.getString(KEY_INTERVIEWER_URI, null)
+
+        if (!previousUri.isNullOrBlank() && previousUri != uri.toString()) {
+            runCatching {
+                contentResolver.releasePersistableUriPermission(
+                    Uri.parse(previousUri),
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            }
+        }
+        runCatching {
+            contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+        }
+
+        preferences.edit().putString(KEY_INTERVIEWER_URI, uri.toString()).apply()
+        displayInterviewerImage(uri, showFailureMessage = true)
+    }
+
+    private fun loadSavedInterviewerImage() {
+        val uriText = getSharedPreferences(PREFS_INTERVIEWER, MODE_PRIVATE)
+            .getString(KEY_INTERVIEWER_URI, null)
+            .orEmpty()
+        if (uriText.isNotBlank()) {
+            displayInterviewerImage(Uri.parse(uriText), showFailureMessage = false)
+        }
+    }
+
+    private fun displayInterviewerImage(uri: Uri, showFailureMessage: Boolean) {
+        lifecycleScope.launch {
+            val drawableResult = runCatching {
+                withContext(Dispatchers.IO) {
+                    val source = ImageDecoder.createSource(contentResolver, uri)
+                    ImageDecoder.decodeDrawable(source) { decoder, info, _ ->
+                        val width = info.size.width
+                        val height = info.size.height
+                        val longestEdge = maxOf(width, height)
+                        if (longestEdge > MAX_INTERVIEWER_IMAGE_SIZE) {
+                            val scale = MAX_INTERVIEWER_IMAGE_SIZE.toFloat() / longestEdge.toFloat()
+                            decoder.setTargetSize(
+                                (width * scale).toInt().coerceAtLeast(1),
+                                (height * scale).toInt().coerceAtLeast(1)
+                            )
+                        }
+                    }
+                }
+            }
+
+            drawableResult.onSuccess { drawable ->
+                interviewerImageView.setImageDrawable(drawable)
+            }.onFailure {
+                getSharedPreferences(PREFS_INTERVIEWER, MODE_PRIVATE)
+                    .edit()
+                    .remove(KEY_INTERVIEWER_URI)
+                    .apply()
+                interviewerImageView.setImageResource(R.drawable.interviewer)
+                if (showFailureMessage) {
+                    Toast.makeText(
+                        this@AnswerActivity,
+                        "선택한 사진을 불러올 수 없습니다.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
         }
     }
 
@@ -403,6 +499,9 @@ class AnswerActivity : AppCompatActivity() {
         private const val MIN_AUDIO_SECONDS = 1.0f
         private const val MIN_PEAK_AMPLITUDE = 500
         private const val RECORDING_THREAD_JOIN_TIMEOUT_MS = 1_000L
+        private const val PREFS_INTERVIEWER = "interviewer_image_prefs"
+        private const val KEY_INTERVIEWER_URI = "interviewer_image_uri"
+        private const val MAX_INTERVIEWER_IMAGE_SIZE = 1_024
         private const val DEFAULT_QUESTION = "HR 직무에서 가장 중요하다고 생각하는 역량은 무엇인가요?"
     }
 
