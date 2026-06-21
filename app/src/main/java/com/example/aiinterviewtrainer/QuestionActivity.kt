@@ -13,7 +13,6 @@ class QuestionActivity : AppCompatActivity() {
     private lateinit var questionAdapter: QuestionAdapter
     private val firestore = FirebaseFirestore.getInstance()
 
-    // 이 화면의 핵심 키가 될 연습 ID
     private var practiceId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,17 +21,15 @@ class QuestionActivity : AppCompatActivity() {
         setContentView(binding.root)
         bindAppHomeTitle()
 
-        // 1. 인텐트로 넘어온 고유 ID 받기
         practiceId = intent.getStringExtra(AnswerActivity.EXTRA_PRACTICE_ID)
 
         setupUI()
         setupRecyclerView()
 
-        // 2. ID가 정상적으로 있으면 파이어베이스에서 질문 데이터 원격 로드
         if (!practiceId.isNullOrEmpty()) {
             loadQuestionsFromFirebase(practiceId!!)
         } else {
-            Toast.makeText(this, "오류: 면접 기록 ID를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "오류: 면접 기록을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
             finish()
         }
     }
@@ -44,7 +41,6 @@ class QuestionActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        // 🌟 아직 ID가 없으므로 빈 리스트와 빈 문자열("")을 넘겨서 임시 초기화합니다.
         questionAdapter = QuestionAdapter(emptyList(), "")
 
         binding.rvQuestions.apply {
@@ -53,11 +49,7 @@ class QuestionActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * 🌟 파이어베이스 서브 컬렉션에서 질문 5개를 가져오는 핵심 함수
-     */
     private fun loadQuestionsFromFirebase(id: String) {
-        // [A] 먼저 상위 문서에서 직무 제목(jobTitle)을 가져와 타이틀 바에 꽂아줍니다.
         firestore.collection("History").document(id).get()
             .addOnSuccessListener { document ->
                 if (document != null) {
@@ -66,7 +58,6 @@ class QuestionActivity : AppCompatActivity() {
                 }
             }
 
-        // [B] 서브 컬렉션 'Questions'에 접근해서 q0, q1, q2... 순서대로 가져옵니다.
         firestore.collection("History")
             .document(id)
             .collection("Questions")
@@ -88,8 +79,6 @@ class QuestionActivity : AppCompatActivity() {
                         ?: document.id.removePrefix("q").toIntOrNull()
                         ?: questionList.size
 
-                    // 우리가 정의한 네트워크 데이터 모델(InterviewQuestion) 형식으로 바인딩
-                    // 🌟 모든 필수 파라미터에 값을 채워줍니다.
                     questionList.add(
                         InterviewQuestion(
                             id = questionOrder,
@@ -101,10 +90,6 @@ class QuestionActivity : AppCompatActivity() {
                     )
                 }
 
-                // [C] 🌟 어댑터에 파이어베이스에서 읽어온 진짜 질문 5개를 넣어 화면에 뿌려줍니다!
-                // 기존 어댑터에 데이터 리스트를 업데이트하는 함수가 있다면 그걸 호출하셔도 됩니다.
-                // 기존: questionAdapter = QuestionAdapter(questionList)
-// 🌟 변경: 파이어베이스에서 읽어온 진짜 질문 리스트와, 상단에서 추출한 practiceId를 함께 전달합니다!
                 questionAdapter = QuestionAdapter(questionList, id)
                 binding.rvQuestions.adapter = questionAdapter
             }

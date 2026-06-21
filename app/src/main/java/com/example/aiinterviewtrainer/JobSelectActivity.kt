@@ -21,7 +21,7 @@ import java.util.Locale
 class JobSelectActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityJobSelectBinding
-    private var isGenerating = false // 웹뷰 로딩 감시 플래그
+    private var isGenerating = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,19 +77,25 @@ class JobSelectActivity : AppCompatActivity() {
     private fun callApiAndNavigate(extractedJdText: String) {
         lifecycleScope.launch {
             try {
-                // 1. API 호출로 질문 5개 받아오기
+                // API 호출로 질문 5개 받아오기
                 val generatedInterview = InterviewQuestionRepository.generateInterview(
                     context = this@JobSelectActivity,
                     jdText = extractedJdText
                 )
                 val questions = generatedInterview.questions
+                if (generatedInterview.isFallback) {
+                    Toast.makeText(
+                        this@JobSelectActivity,
+                        "인터넷에 연결할 수 없어 기본 면접 질문 5개로 진행합니다.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
 
-                // 2. 고유 ID 및 메타데이터 생성
+                // 고유 ID 및 메타데이터 생성
                 val practiceId = System.currentTimeMillis().toString()
                 val jobTitle = generatedInterview.practiceTitle
                 val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
-                // 질문 저장이 끝난 뒤 화면을 열어 빈 목록이 보이는 경쟁 조건을 막습니다.
                 saveToFirebase(
                     practiceId = practiceId,
                     jobTitle = jobTitle,
@@ -119,7 +125,7 @@ class JobSelectActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 setLoadingState(false)
                 val message = if (e is SocketTimeoutException) {
-                    "Gemini 응답 시간이 초과되었습니다. 네트워크 상태를 확인한 뒤 다시 시도해 주세요."
+                    "응답 시간이 초과되었습니다. 네트워크 상태를 확인한 뒤 다시 시도해 주세요."
                 } else {
                     "질문 생성 실패: ${e.message ?: "알 수 없는 오류"}"
                 }
@@ -140,7 +146,7 @@ class JobSelectActivity : AppCompatActivity() {
         val historyReference = firestore.collection("History").document(practiceId)
         val batch = firestore.batch()
 
-        // 1) 상위 문서(History) 생성
+        // 상위 문서(History) 생성
         val historyMap = hashMapOf(
             "practiceId" to practiceId,
             "jobTitle" to jobTitle,

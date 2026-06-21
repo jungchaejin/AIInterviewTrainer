@@ -1,6 +1,7 @@
 package com.example.aiinterviewtrainer.repository
 
 import android.content.Context
+import android.util.Log
 import com.example.aiinterviewtrainer.R
 import com.example.aiinterviewtrainer.model.GeneratedInterview
 import com.example.aiinterviewtrainer.model.InterviewQuestion
@@ -12,12 +13,31 @@ import com.example.aiinterviewtrainer.network.NetworkClient
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.CancellationException
 import java.net.SocketTimeoutException
 
 object InterviewQuestionRepository {
     private val gson = Gson()
 
     suspend fun generateInterview(context: Context, jdText: String): GeneratedInterview {
+        require(jdText.isNotBlank()) {
+            "채용공고 텍스트가 비어 있습니다."
+        }
+
+        return try {
+            generateInterviewFromGemini(context, jdText)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            Log.w(TAG, "Gemini question generation failed. Using fallback questions.", exception)
+            createFallbackInterview()
+        }
+    }
+
+    private suspend fun generateInterviewFromGemini(
+        context: Context,
+        jdText: String
+    ): GeneratedInterview {
         val apiKey = context.getString(R.string.gemini_api_key).trim()
         val modelName = context.getString(R.string.gemini_model_name).trim()
 
@@ -65,12 +85,57 @@ object InterviewQuestionRepository {
 
         return GeneratedInterview(
             practiceTitle = practiceTitle,
-            questions = questions
+            questions = questions,
+            isFallback = false
         )
     }
 
     suspend fun getQuestions(context: Context, jdText: String): List<InterviewQuestion> {
         return generateInterview(context, jdText).questions
+    }
+
+    private fun createFallbackInterview(): GeneratedInterview {
+        return GeneratedInterview(
+            practiceTitle = "기본 직무 면접 연습",
+            isFallback = true,
+            questions = listOf(
+                InterviewQuestion(
+                    id = 1,
+                    question = "최근 수행한 프로젝트에서 가장 어려웠던 문제와 이를 해결한 과정을 설명해 주세요.",
+                    questionType = "문제 해결",
+                    expectedKeywords = listOf("문제 상황", "원인 분석", "본인 역할", "해결 과정", "성과"),
+                    evaluationPoints = listOf("문제 상황의 구체성", "본인의 역할", "해결 행동의 논리성", "결과와 배운 점")
+                ),
+                InterviewQuestion(
+                    id = 2,
+                    question = "지원하신 직무에서 가장 중요하다고 생각하는 역량은 무엇이며, 그 역량을 발휘한 경험이 있나요?",
+                    questionType = "직무 전문성",
+                    expectedKeywords = listOf("직무 이해", "핵심 역량", "업무 경험", "판단 근거", "성과"),
+                    evaluationPoints = listOf("직무에 대한 이해도", "역량 선택의 근거", "경험의 구체성", "업무 기여 가능성")
+                ),
+                InterviewQuestion(
+                    id = 3,
+                    question = "협업 과정에서 의견 충돌이 발생했을 때 어떻게 조율했는지 말씀해 주세요.",
+                    questionType = "상황 대처",
+                    expectedKeywords = listOf("갈등 상황", "의사소통", "의견 조율", "협업", "결과"),
+                    evaluationPoints = listOf("갈등 원인의 이해", "본인의 중재 역할", "의사소통 방식", "관계 및 결과의 변화")
+                ),
+                InterviewQuestion(
+                    id = 4,
+                    question = "목표한 결과를 얻지 못했던 경험과 이후 어떤 방식으로 개선했는지 설명해 주세요.",
+                    questionType = "경험 검증",
+                    expectedKeywords = listOf("목표", "실패 원인", "피드백", "개선 행동", "재도전"),
+                    evaluationPoints = listOf("실패 원인의 객관적 분석", "책임감 있는 태도", "개선 행동의 구체성", "학습과 성장")
+                ),
+                InterviewQuestion(
+                    id = 5,
+                    question = "입사 후 새로운 업무나 기술을 빠르게 익혀야 한다면 어떤 방식으로 학습하고 적용하시겠어요?",
+                    questionType = "성장 가능성",
+                    expectedKeywords = listOf("학습 계획", "우선순위", "정보 탐색", "실무 적용", "피드백"),
+                    evaluationPoints = listOf("학습 계획의 현실성", "자기주도성", "업무 적용 방법", "피드백 활용 태도")
+                )
+            )
+        )
     }
 
     private suspend fun requestQuestionsWithRetry(
@@ -193,6 +258,7 @@ object InterviewQuestionRepository {
     )
 
     private const val QUESTION_COUNT = 5
+    private const val TAG = "InterviewQuestionRepo"
     private const val DEFAULT_MODEL_NAME = "gemini-2.5-flash"
     private const val DEFAULT_PRACTICE_TITLE = "직무 맞춤 면접 연습"
     private const val MAX_PRACTICE_TITLE_LENGTH = 30

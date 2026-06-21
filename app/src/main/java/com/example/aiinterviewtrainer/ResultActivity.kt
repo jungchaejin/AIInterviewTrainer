@@ -197,7 +197,7 @@ class ResultActivity : AppCompatActivity() {
     private fun loadGeminiFeedback() {
         val feedbackTextView = findViewById<TextView>(R.id.feedbackTextView)
         isFeedbackLoading = true
-        feedbackTextView.text = "잠시만 기다려 주세요! Gemini가 종합 피드백을 생성하고 있습니다."
+        feedbackTextView.text = "잠시만 기다려 주세요! 종합 피드백을 생성하고 있습니다."
 
         lifecycleScope.launch {
             runCatching {
@@ -224,7 +224,7 @@ class ResultActivity : AppCompatActivity() {
                 feedbackTextView.text = analysis.feedback
                 Toast.makeText(
                     this@ResultActivity,
-                    "Gemini 피드백을 불러오지 못해 기본 분석을 표시합니다.",
+                    "피드백을 불러오지 못해 기본 분석을 표시합니다.",
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -469,7 +469,7 @@ class ResultActivity : AppCompatActivity() {
                     isEnabled = false
                     text = "저장된 기록입니다"
                 }
-                Toast.makeText(this, "기록을 Firebase에 저장했습니다.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "기록을 저장했습니다.", Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener { exception ->
                 Toast.makeText(
@@ -489,7 +489,7 @@ class ResultActivity : AppCompatActivity() {
         try {
             startActivity(intent)
         } catch (exception: ActivityNotFoundException) {
-            Toast.makeText(this, "QuestionActivity가 아직 준비되지 않았습니다.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Question 화면이 아직 준비되지 않았습니다.", Toast.LENGTH_SHORT).show()
         }
     }
 

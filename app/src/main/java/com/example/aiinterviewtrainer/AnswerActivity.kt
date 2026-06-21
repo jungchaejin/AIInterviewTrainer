@@ -236,7 +236,7 @@ class AnswerActivity : AppCompatActivity() {
                     listeningTextView.text = "답변 준비 중"
                     Toast.makeText(
                         this,
-                        exception.message ?: "Google STT 변환에 실패했습니다.",
+                        exception.message ?: "텍스트 변환에 실패했습니다.",
                         Toast.LENGTH_LONG
                     ).show()
                 }
