@@ -205,7 +205,8 @@ class AnswerActivity : AppCompatActivity() {
 
     private fun saveAndDisplayInterviewerImage(uri: Uri) {
         val preferences = getSharedPreferences(PREFS_INTERVIEWER, MODE_PRIVATE)
-        val previousUri = preferences.getString(KEY_INTERVIEWER_URI, null)
+        val preferenceKey = interviewerImagePreferenceKey()
+        val previousUri = preferences.getString(preferenceKey, null)
 
         if (!previousUri.isNullOrBlank() && previousUri != uri.toString()) {
             runCatching {
@@ -222,13 +223,14 @@ class AnswerActivity : AppCompatActivity() {
             )
         }
 
-        preferences.edit().putString(KEY_INTERVIEWER_URI, uri.toString()).apply()
+        preferences.edit().putString(preferenceKey, uri.toString()).apply()
         displayInterviewerImage(uri, showFailureMessage = true)
     }
 
     private fun loadSavedInterviewerImage() {
+        interviewerImageView.setImageResource(R.drawable.interviewer)
         val uriText = getSharedPreferences(PREFS_INTERVIEWER, MODE_PRIVATE)
-            .getString(KEY_INTERVIEWER_URI, null)
+            .getString(interviewerImagePreferenceKey(), null)
             .orEmpty()
         if (uriText.isNotBlank()) {
             displayInterviewerImage(Uri.parse(uriText), showFailureMessage = false)
@@ -264,7 +266,7 @@ class AnswerActivity : AppCompatActivity() {
             }.onFailure {
                 getSharedPreferences(PREFS_INTERVIEWER, MODE_PRIVATE)
                     .edit()
-                    .remove(KEY_INTERVIEWER_URI)
+                    .remove(interviewerImagePreferenceKey())
                     .apply()
                 interviewerImageView.setImageResource(R.drawable.interviewer)
                 if (showFailureMessage) {
@@ -276,6 +278,10 @@ class AnswerActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun interviewerImagePreferenceKey(): String {
+        return "${KEY_INTERVIEWER_URI_PREFIX}_$practiceId"
     }
 
     private fun stopRecordingAndTranscribe() {
@@ -505,7 +511,7 @@ class AnswerActivity : AppCompatActivity() {
         private const val MIN_PEAK_AMPLITUDE = 500
         private const val RECORDING_THREAD_JOIN_TIMEOUT_MS = 1_000L
         private const val PREFS_INTERVIEWER = "interviewer_image_prefs"
-        private const val KEY_INTERVIEWER_URI = "interviewer_image_uri"
+        private const val KEY_INTERVIEWER_URI_PREFIX = "interviewer_image_uri"
         private const val MAX_INTERVIEWER_IMAGE_SIZE = 1_024
     }
 

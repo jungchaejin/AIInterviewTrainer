@@ -15,6 +15,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:minHeight="96dp"
         android:padding="16dp">
 
         <LinearLayout
@@ -41,15 +42,13 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:ellipsize="end"
-            android:maxLines="2"
+            android:layout_marginEnd="16dp"
             android:textColor="@color/text_black"
             android:textSize="16sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@id/tv_date"
+            app:layout_constraintEnd_toStartOf="@id/iv_arrow"
             app:layout_constraintStart_toEndOf="@id/layout_icon"
-            app:layout_constraintTop_toTopOf="@id/layout_icon"
-            app:layout_constraintVertical_chainStyle="packed"
+            app:layout_constraintTop_toTopOf="parent"
             tools:text="네이버웹툰 HR 인턴 면접 연습" />
 
         <TextView
@@ -60,8 +59,8 @@
             tools:text="2026.05.19"
             android:textColor="#8B95A1"
             android:textSize="12sp"
-            app:layout_constraintBottom_toBottomOf="@id/layout_icon"
-            app:layout_constraintEnd_toEndOf="@id/tv_title"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/iv_arrow"
             app:layout_constraintStart_toStartOf="@id/tv_title"
             app:layout_constraintTop_toBottomOf="@id/tv_title" />
 
